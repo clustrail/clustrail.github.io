@@ -8,7 +8,7 @@
 export const CHANGELOG: Record<string, string[]> = {
   'v0.1.3': [
     'A full-size Settings page with Preferences, Session, and Clusters sections, replacing the old settings dialog.',
-    'Runtime cluster management: add and remove clusters from the UI (paste a kubeconfig or enter a server and token). Added clusters are stored in Clustrail's own config, never your kubeconfig. Enable with --enable-dynamic-clusters.',
+    'Runtime cluster management: add and remove clusters from the UI (paste a kubeconfig or enter a server and token). Added clusters are stored in a Clustrail-managed config, never your kubeconfig. Enable with --enable-dynamic-clusters.',
     'A fleet overview: a per-cluster live summary across the clusters you select, with node and pod counts and health at a glance.',
   ],
   'v0.1.2': [
