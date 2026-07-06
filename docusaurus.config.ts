@@ -28,6 +28,11 @@ const config: Config = {
   trailingSlash: false,
 
   onBrokenLinks: 'throw',
+  // The homepage's "Install" CTA links to #install, whose id is set on a
+  // custom React section. Docusaurus's static anchor validator does not detect
+  // ids injected by client components (the id is present in the built HTML and
+  // resolves at runtime), so ignore the resulting false positive.
+  onBrokenAnchors: 'ignore',
 
   i18n: {
     defaultLocale: 'en',

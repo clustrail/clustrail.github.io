@@ -127,6 +127,7 @@
   --text-micro--line-height: 0.875rem;
 
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 }
 
 /*
@@ -159,6 +160,15 @@
 /* Give the navbar the dashboard's hairline separation instead of a shadow. */
 .navbar {
   border-bottom: 1px solid var(--border);
+}
+
+/* Docusaurus hides the navbar color-mode toggle below 996px, expecting it to
+   move into the mobile sidebar. This site has no nav items, so there is no
+   hamburger to hold it - keep the toggle visible in the navbar on mobile. */
+@media (max-width: 996px) {
+  .navbar__items--right [class*="colorModeToggle"] {
+    display: flex;
+  }
 }
 
 /* Balance the brand mark and the two-tone wordmark so they read as one lockup:
@@ -218,4 +228,41 @@ body {
     cursor: pointer;
     text-align: inherit;
   }
+}
+
+/* ============================================================== effects
+ * MagicUI-style landing effects, all scoped to .clustrail-landing. Keyframes
+ * are global (harmless); helper classes are scoped so they never collide with
+ * Docusaurus chrome.
+ */
+
+/* Dotted-grid backdrop for section/hero backgrounds. */
+.clustrail-landing .bg-dotgrid {
+  background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+/* Horizontal fade mask - used on the marquee and ghost wordmark edges. */
+.clustrail-landing .mask-fade-x {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12%,
+    #000 88%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12%,
+    #000 88%,
+    transparent
+  );
+}
+
+/* Browser-frame screenshots: crop the image's own rounded corners cleanly. */
+.clustrail-landing .shot-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
