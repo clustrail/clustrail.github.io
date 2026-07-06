@@ -25,6 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Ensure GitHub Pages is enabled (source: GitHub Actions) before deploying.
+      # `enablement: true` self-heals the "Pages not enabled -> deploy-pages 404"
+      # failure: if Pages is ever turned off, the next run re-enables it (uses the
+      # workflow token's pages: write) instead of leaving the site 404ing.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
