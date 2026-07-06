@@ -1,10 +1,12 @@
 import type {ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import {BrowserFrame, CopyButton, GradientText, Pill} from '@site/src/components/site/primitives';
+import {useReleases} from '@site/src/lib/releases';
 
 const INSTALL_CMD = 'curl -fsSL https://clustrail.github.io/install.sh | sh';
 
 export default function Hero(): ReactNode {
+  const {latest} = useReleases();
   return (
     <section className="relative overflow-hidden pt-24 pb-20 sm:pt-32 sm:pb-28">
       {/* Dotted-grid backdrop, faded out toward the edges so it never touches the page seams. */}
@@ -19,10 +21,12 @@ export default function Hero(): ReactNode {
       />
 
       <div className="relative mx-auto flex max-w-6xl flex-col items-center px-6 text-center">
-        <Pill>
-          <span className="size-1.5 rounded-full bg-primary" />
-          v0.1.0 is here
-        </Pill>
+        <Link to="/changelog" className="no-underline hover:no-underline">
+          <Pill>
+            <span className="size-1.5 rounded-full bg-primary" />
+            {latest ? `${latest.tag} is here` : 'Now available'}
+          </Pill>
+        </Link>
 
         <h1 className="mt-6 text-5xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
           A Kubernetes UI

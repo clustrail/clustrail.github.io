@@ -39,7 +39,7 @@ const config: Config = {
     locales: ['en'],
   },
 
-  plugins: [tailwindPlugin],
+  plugins: [tailwindPlugin, './plugins/releases.js'],
 
   presets: [
     [
@@ -66,7 +66,7 @@ const config: Config = {
         alt: 'Clustrail',
         src: 'favicon.svg',
       },
-      items: [],
+      items: [{to: '/changelog', label: 'Changelog', position: 'right'}],
     },
     footer: {
       copyright: '© 2026 Clustrail',

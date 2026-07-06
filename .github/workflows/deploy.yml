@@ -32,6 +32,10 @@ jobs:
       - run: corepack prepare pnpm@11.5.2 --activate
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+        # Authenticates the build-time GitHub Releases fetch (the changelog +
+        # latest-version badge) so it isn't subject to the anonymous rate limit.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build
