@@ -5,7 +5,7 @@ import {useReleases, type Release} from '@site/src/lib/releases';
 import {CHANGELOG} from '@site/src/data/changelog';
 
 /** Format an ISO timestamp deterministically (UTC) so SSR and hydration match. */
-function formatDate(iso: string): string {
+function formatDate(iso: string | undefined): string {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -15,25 +15,56 @@ function formatDate(iso: string): string {
   });
 }
 
-function ReleaseEntry({release, latest}: {release: Release; latest: boolean}): ReactNode {
-  const notes = CHANGELOG[release.tag];
+/** Parse `vX.Y.Z` into a comparable tuple (pre-release suffix ignored). */
+function versionKey(tag: string): [number, number, number] {
+  const parts = tag.replace(/^v/, '').split('-')[0].split('.');
+  return [
+    parseInt(parts[0], 10) || 0,
+    parseInt(parts[1], 10) || 0,
+    parseInt(parts[2], 10) || 0,
+  ];
+}
+
+/** Newest-first tag comparison. */
+function compareDesc(a: string, b: string): number {
+  const av = versionKey(a);
+  const bv = versionKey(b);
+  for (let i = 0; i < 3; i++) {
+    if (av[i] !== bv[i]) return bv[i] - av[i];
+  }
+  return 0;
+}
+
+function ReleaseEntry({
+  tag,
+  notes,
+  release,
+  latest,
+}: {
+  tag: string;
+  notes: string[] | undefined;
+  release: Release | undefined;
+  latest: boolean;
+}): ReactNode {
   return (
     <article className="border-t border-border/60 py-8 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="font-mono text-xl font-semibold tracking-tight text-foreground">
-          {release.tag}
+          {tag}
         </h2>
         {latest && (
           <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary">
             Latest
           </span>
         )}
-        {release.prerelease && (
+        {release?.prerelease && (
           <span className="rounded-full border border-border px-2 py-0.5 text-2xs font-medium text-muted-foreground">
             Pre-release
           </span>
         )}
-        <span className="text-sm text-muted-foreground">{formatDate(release.publishedAt)}</span>
+        <span className="text-sm text-muted-foreground">
+          {formatDate(release?.publishedAt)}
+        </span>
       </div>
       {notes?.length ? (
         <ul className="mt-4 ml-4 flex list-disc flex-col gap-2">
@@ -50,6 +81,17 @@ function ReleaseEntry({release, latest}: {release: Release; latest: boolean}): R
 
 export default function Changelog(): ReactNode {
   const {releases, latest} = useReleases();
+
+  // The curated notes are the source of truth for which versions to show; the
+  // releases API only enriches them with dates and the "latest" flag. This makes
+  // a version appear as soon as it is committed here - never gated on the API
+  // having returned it at build time (which races with the release publish).
+  const byTag = new Map(releases.map((r) => [r.tag, r]));
+  const tags = Array.from(
+    new Set([...Object.keys(CHANGELOG), ...releases.map((r) => r.tag)]),
+  ).sort(compareDesc);
+  const latestTag = latest?.tag ?? tags[0];
+
   return (
     <Layout
       title="Changelog"
@@ -73,7 +115,7 @@ export default function Changelog(): ReactNode {
           </header>
 
           <div className="mt-12">
-            {releases.length === 0 ? (
+            {tags.length === 0 ? (
               <p className="text-[15px] text-muted-foreground">
                 No releases yet. Check back soon, or see{' '}
                 <Link to="/#install" className="text-primary hover:underline">
@@ -82,11 +124,13 @@ export default function Changelog(): ReactNode {
                 .
               </p>
             ) : (
-              releases.map((release) => (
+              tags.map((tag) => (
                 <ReleaseEntry
-                  key={release.tag}
-                  release={release}
-                  latest={latest?.tag === release.tag}
+                  key={tag}
+                  tag={tag}
+                  notes={CHANGELOG[tag]}
+                  release={byTag.get(tag)}
+                  latest={tag === latestTag}
                 />
               ))
             )}
