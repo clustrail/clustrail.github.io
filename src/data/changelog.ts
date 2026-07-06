@@ -6,6 +6,11 @@
  * new version is never hidden - it just wants a summary written for it.
  */
 export const CHANGELOG: Record<string, string[]> = {
+  'v0.1.4': [
+    'Per-cluster OIDC: declare a cluster in config with its own OpenID Connect provider, and each user signs in to that cluster directly. The verified id_token becomes that cluster\'s credential, so RBAC is still enforced by the API server.',
+    'Sign in and out of an OIDC cluster from Settings > Clusters, which shows each cluster\'s source and whether you are signed in.',
+    'Supports a private issuer CA, so an in-cluster provider like dex works out of the box.',
+  ],
   'v0.1.3': [
     'A full-size Settings page with Preferences, Session, and Clusters sections, replacing the old settings dialog.',
     'Runtime cluster management: add and remove clusters from the UI (paste a kubeconfig or enter a server and token). Added clusters are stored in a Clustrail-managed config, never your kubeconfig. Enable with --enable-dynamic-clusters.',
