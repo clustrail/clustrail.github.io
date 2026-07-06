@@ -1,8 +1,9 @@
 import type {ReactNode} from 'react';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
-import {useReleases, type Release} from '@site/src/lib/releases';
+import {useReleases} from '@site/src/lib/releases';
 import {CHANGELOG} from '@site/src/data/changelog';
+import {allKnownTags, latestTag} from '@site/src/lib/version';
 
 /** Format an ISO timestamp deterministically (UTC) so SSR and hydration match. */
 function formatDate(iso: string | undefined): string {
@@ -15,35 +16,17 @@ function formatDate(iso: string | undefined): string {
   });
 }
 
-/** Parse `vX.Y.Z` into a comparable tuple (pre-release suffix ignored). */
-function versionKey(tag: string): [number, number, number] {
-  const parts = tag.replace(/^v/, '').split('-')[0].split('.');
-  return [
-    parseInt(parts[0], 10) || 0,
-    parseInt(parts[1], 10) || 0,
-    parseInt(parts[2], 10) || 0,
-  ];
-}
-
-/** Newest-first tag comparison. */
-function compareDesc(a: string, b: string): number {
-  const av = versionKey(a);
-  const bv = versionKey(b);
-  for (let i = 0; i < 3; i++) {
-    if (av[i] !== bv[i]) return bv[i] - av[i];
-  }
-  return 0;
-}
-
 function ReleaseEntry({
   tag,
   notes,
-  release,
+  date,
+  prerelease,
   latest,
 }: {
   tag: string;
   notes: string[] | undefined;
-  release: Release | undefined;
+  date: string | undefined;
+  prerelease: boolean;
   latest: boolean;
 }): ReactNode {
   return (
@@ -57,14 +40,12 @@ function ReleaseEntry({
             Latest
           </span>
         )}
-        {release?.prerelease && (
+        {prerelease && (
           <span className="rounded-full border border-border px-2 py-0.5 text-2xs font-medium text-muted-foreground">
             Pre-release
           </span>
         )}
-        <span className="text-sm text-muted-foreground">
-          {formatDate(release?.publishedAt)}
-        </span>
+        <span className="text-sm text-muted-foreground">{formatDate(date)}</span>
       </div>
       {notes?.length ? (
         <ul className="mt-4 ml-4 flex list-disc flex-col gap-2">
@@ -80,17 +61,17 @@ function ReleaseEntry({
 }
 
 export default function Changelog(): ReactNode {
-  const {releases, latest} = useReleases();
+  const {releases} = useReleases();
 
-  // The curated notes are the source of truth for which versions to show; the
-  // releases API only enriches them with dates and the "latest" flag. This makes
-  // a version appear as soon as it is committed here - never gated on the API
-  // having returned it at build time (which races with the release publish).
+  // The committed changelog is the source of truth for which versions exist,
+  // their notes, and their dates; the releases API is only a best-effort fallback
+  // for a version not yet curated (its date/prerelease flag). Nothing shown here
+  // depends on the API having returned a given release at build time - which races
+  // with the release publish - so the site is correct the moment this commit
+  // deploys.
   const byTag = new Map(releases.map((r) => [r.tag, r]));
-  const tags = Array.from(
-    new Set([...Object.keys(CHANGELOG), ...releases.map((r) => r.tag)]),
-  ).sort(compareDesc);
-  const latestTag = latest?.tag ?? tags[0];
+  const tags = allKnownTags(releases);
+  const newest = latestTag(releases);
 
   return (
     <Layout
@@ -124,15 +105,20 @@ export default function Changelog(): ReactNode {
                 .
               </p>
             ) : (
-              tags.map((tag) => (
-                <ReleaseEntry
-                  key={tag}
-                  tag={tag}
-                  notes={CHANGELOG[tag]}
-                  release={byTag.get(tag)}
-                  latest={tag === latestTag}
-                />
-              ))
+              tags.map((tag) => {
+                const entry = CHANGELOG[tag];
+                const release = byTag.get(tag);
+                return (
+                  <ReleaseEntry
+                    key={tag}
+                    tag={tag}
+                    notes={entry?.notes}
+                    date={entry?.date ?? release?.publishedAt}
+                    prerelease={Boolean(release?.prerelease)}
+                    latest={tag === newest}
+                  />
+                );
+              })
             )}
           </div>
         </div>

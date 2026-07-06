@@ -2,11 +2,16 @@ import type {ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import {BrowserFrame, CopyButton, GradientText, Pill} from '@site/src/components/site/primitives';
 import {useReleases} from '@site/src/lib/releases';
+import {latestTag} from '@site/src/lib/version';
 
 const INSTALL_CMD = 'curl -fsSL https://clustrail.github.io/install.sh | sh';
 
 export default function Hero(): ReactNode {
-  const {latest} = useReleases();
+  const {releases} = useReleases();
+  // The latest version comes from the committed changelog (falling back to the
+  // API), never from the API alone - so the badge is correct on the release
+  // commit's deploy regardless of when the GitHub release is published.
+  const latest = latestTag(releases);
   return (
     <section className="relative overflow-hidden pt-24 pb-20 sm:pt-32 sm:pb-28">
       {/* Dotted-grid backdrop, faded out toward the edges so it never touches the page seams. */}
@@ -24,7 +29,7 @@ export default function Hero(): ReactNode {
         <Link to="/changelog" className="no-underline hover:no-underline">
           <Pill>
             <span className="size-1.5 rounded-full bg-primary" />
-            {latest ? `${latest.tag} is here` : 'Now available'}
+            {latest ? `${latest} is here` : 'Now available'}
           </Pill>
         </Link>
 

@@ -1,11 +1,14 @@
 // Build-time data source: the GitHub Releases published to this repo by the
-// release pipeline (goreleaser targets clustrail/clustrail.github.io). It runs
-// during `docusaurus build`, and the deploy workflow rebuilds on
-// `release: published`, so a new version flows onto the site automatically.
+// release pipeline (goreleaser targets clustrail/clustrail.github.io).
 //
-// The result is exposed as plugin global data (see src/lib/releases.ts): the
-// hero badge reads the latest version and the /changelog page renders the notes.
-// A failed fetch degrades to an empty list so a build never breaks on it.
+// This is a BEST-EFFORT FALLBACK, not the source of truth. The site renders its
+// version, dates, and notes from the committed changelog (src/data/changelog.ts);
+// this fetch only supplies a date/prerelease flag for a release that has no
+// curated entry yet, and it can never override committed data. That is
+// deliberate: this fetch runs during `docusaurus build` and races with the
+// release publish (a deploy can build before the GitHub release exists), so
+// nothing the site must get right is allowed to depend on it. A failed fetch
+// degrades to an empty list - the site is still fully correct from committed data.
 //
 // CommonJS: the package has no "type": "module", so plugins load via require().
 
