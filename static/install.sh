@@ -39,8 +39,12 @@ esac
 # --- version ----------------------------------------------------------------
 tag="${CLUSTRAIL_VERSION:-}"
 if [ -z "$tag" ]; then
-  tag=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" |
-    grep -m1 '"tag_name"' | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')
+  # Resolve the latest tag WITHOUT the GitHub API: the /releases/latest page
+  # 302-redirects to /releases/tag/<tag>. This hits github.com rather than
+  # api.github.com, avoiding the 60-request/hour anonymous API rate limit
+  # (which returns 403) and proxies that block the API host.
+  tag=$(curl -fsSLI -o /dev/null -w '%{url_effective}' \
+    "https://github.com/${REPO}/releases/latest" | sed -E 's#.*/tag/##')
   [ -n "$tag" ] || fail "could not resolve the latest release tag"
 fi
 case "$tag" in v*) ;; *) tag="v${tag}" ;; esac
