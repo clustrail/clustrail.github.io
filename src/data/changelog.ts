@@ -6,6 +6,11 @@
  * new version is never hidden - it just wants a summary written for it.
  */
 export const CHANGELOG: Record<string, string[]> = {
+  'v0.1.3': [
+    'A full-size Settings page with Preferences, Session, and Clusters sections, replacing the old settings dialog.',
+    'Runtime cluster management: add and remove clusters from the UI (paste a kubeconfig or enter a server and token). Added clusters are stored in Clustrail's own config, never your kubeconfig. Enable with --enable-dynamic-clusters.',
+    'A fleet overview: a per-cluster live summary across the clusters you select, with node and pod counts and health at a glance.',
+  ],
   'v0.1.2': [
     'Cross-cluster Fleet views: list one resource type across several clusters at once, in a single live table with a Cluster column.',
     'Launch a fleet by multi-selecting contexts on the Contexts page and choosing "Open fleet".',
