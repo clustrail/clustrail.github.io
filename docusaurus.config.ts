@@ -75,9 +75,8 @@ const config: Config = {
         {to: '/changelog', label: 'Changelog', position: 'right'},
       ],
     },
-    footer: {
-      copyright: '© 2026 Clustrail',
-    },
+    // The footer is a swizzled component (src/theme/Footer) rather than
+    // Infima config, so it can carry the branded lockup and link columns.
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
