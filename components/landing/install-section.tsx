@@ -48,8 +48,8 @@ oidc:
 /** One shell command in a copyable row. */
 function CommandRow({command}: {command: string}): ReactNode {
   return (
-    <div className="flex items-center gap-1 rounded-md border border-input bg-black/20 py-1.5 pl-4 pr-1.5">
-      <span aria-hidden className="select-none font-mono text-sm text-acid">
+    <div className="flex items-center gap-1 rounded-lg border border-input bg-card/60 py-1.5 pl-4 pr-1.5">
+      <span aria-hidden className="select-none font-mono text-sm text-link">
         $
       </span>
       <code className="flex-1 overflow-x-auto whitespace-nowrap px-2 py-1.5 font-mono text-[13px] text-foreground">
@@ -68,7 +68,7 @@ function InstallTabs(): ReactNode {
       <div
         role="tablist"
         aria-label="Install channels"
-        className="inline-flex w-fit max-w-full items-center gap-0.5 overflow-x-auto rounded-md border border-border bg-black/20 p-1">
+        className="inline-flex w-fit max-w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-border bg-card/60 p-1">
         {CHANNELS.map((c) => (
           <button
             key={c.id}
@@ -77,10 +77,10 @@ function InstallTabs(): ReactNode {
             aria-selected={active === c.id}
             onClick={() => setActive(c.id)}
             className={clsx(
-              'inline-flex h-8 shrink-0 cursor-pointer items-center rounded-[4px] px-3.5',
-              'font-display text-xs font-medium uppercase tracking-[0.08em] transition-colors',
+              'inline-flex h-8 shrink-0 cursor-pointer items-center rounded-md px-3.5',
+              'text-sm font-medium transition-colors',
               active === c.id
-                ? 'bg-acid text-acid-foreground'
+                ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground',
             )}>
             {c.label}
@@ -97,7 +97,7 @@ function InstallTabs(): ReactNode {
 function CodeCard({code, filename}: {code: string; filename: string}): ReactNode {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex h-11 items-center justify-between border-b border-border bg-black/20 pl-4 pr-1.5">
+      <div className="flex h-11 items-center justify-between border-b border-border bg-background/80 pl-4 pr-1.5">
         <span className="font-mono text-xs text-muted-foreground">{filename}</span>
         <CopyButton text={code} />
       </div>

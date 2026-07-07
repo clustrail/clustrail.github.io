@@ -114,14 +114,14 @@ export default function FeatureShowcase(): ReactNode {
                   <span
                     className={clsx(
                       'flex size-8 shrink-0 items-center justify-center rounded-md transition-colors',
-                      isActive ? 'bg-acid/15 text-acid' : 'bg-white/5 text-muted-foreground',
+                      isActive ? 'bg-primary/15 text-link' : 'bg-white/5 text-muted-foreground',
                     )}>
                     <Icon className="size-4.5" />
                   </span>
                   <span className="min-w-0">
                     <span
                       className={clsx(
-                        'block font-display text-sm font-semibold',
+                        'block text-sm font-semibold',
                         isActive ? 'text-foreground' : 'text-foreground/80',
                       )}>
                       {feature.title}

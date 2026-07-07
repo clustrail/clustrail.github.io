@@ -63,7 +63,7 @@ export default async function DocPage({params}: Props): Promise<ReactNode> {
   return (
     <div className="grid min-w-0 gap-10 xl:grid-cols-[minmax(0,1fr)_13rem]">
       <article className="prose prose-invert docs-prose min-w-0 max-w-3xl prose-headings:scroll-mt-24">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">{doc.title}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{doc.title}</h1>
         <MDXRemote
           source={doc.body}
           components={mdxComponents(doc.dirSlug)}

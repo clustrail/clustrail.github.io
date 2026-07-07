@@ -1,11 +1,13 @@
 import type {ReactNode} from 'react';
-import {CtaButton, DitherStrip} from '@/components/primitives';
+import {CtaButton} from '@/components/primitives';
+import WatchStream from '@/components/landing/watch-stream';
 
 /**
- * The astral "Lint at lightspeed" analog: one big panel carrying the
- * performance story, with the CI-enforced budgets laid out like a spec
- * sheet. These budgets are the product's real acceptance gates, not
- * marketing numbers - the caption says so.
+ * The performance story in one panel: the watch-based data plane (shown as a
+ * live delta stream, the product's signature) beside the pitch, with the
+ * CI-enforced budgets laid out like a spec sheet below. The budgets are the
+ * product's real acceptance gates, not marketing numbers - the caption says
+ * so.
  */
 
 const BUDGETS: Array<{label: string; value: string; detail: string}> = [
@@ -35,57 +37,52 @@ export default function PerfPanel(): ReactNode {
   return (
     <section className="pb-20 sm:pb-28">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="relative overflow-hidden rounded-xl bg-card px-6 py-16 sm:px-12 sm:py-20">
-          {/* Acid dither strips pinned to the panel's top corners. */}
-          <DitherStrip
-            id="perf-tl"
-            flip
-            className="pointer-events-none absolute left-0 top-0 h-10 w-60 text-acid sm:h-12 sm:w-72"
-          />
-          <DitherStrip
-            id="perf-tr"
-            className="pointer-events-none absolute right-0 top-0 h-10 w-60 text-acid sm:h-12 sm:w-72"
+        <div className="relative overflow-hidden rounded-xl border border-border bg-background px-6 py-14 sm:px-12 sm:py-16">
+          {/* Faint brand glow rising from the panel's top edge. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(ellipse_50%_100%_at_50%_0%,rgba(50,108,229,0.12),transparent)]"
           />
 
-          <div className="relative flex flex-col items-center text-center">
-            <span className="font-display text-xs font-medium uppercase tracking-[0.25em] text-acid">
-              Performance
-            </span>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Watch at lightspeed
-            </h2>
-            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-              No polling. One WebSocket streams live deltas from every cluster into a virtualized
-              UI.
-            </p>
-            <CtaButton to="/docs" variant="acid" className="mt-8">
-              Learn more
-            </CtaButton>
+          <div className="relative grid items-center gap-10 lg:grid-cols-2">
+            <div className="flex flex-col items-start">
+              <span className="font-mono text-xs font-medium uppercase tracking-[0.2em] text-link">
+                Performance
+              </span>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                Watch at lightspeed.
+              </h2>
+              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+                No polling, ever. Informers keep a warm cache next to each API server, and one
+                multiplexed WebSocket streams only the deltas into a virtualized UI.
+              </p>
+              <CtaButton to="/docs" variant="primary" className="mt-8">
+                Learn more
+              </CtaButton>
+            </div>
+
+            <WatchStream />
           </div>
 
           {/* The spec sheet: CI-enforced budgets, mono values on the right. */}
-          <div className="relative mx-auto mt-14 max-w-3xl rounded-lg border border-border bg-canvas/60 p-6 sm:p-8">
+          <div className="relative mt-12 rounded-lg border border-border bg-card/50 p-6 sm:p-8">
             <p className="font-mono text-xs text-muted-foreground">
               Performance budgets, enforced as CI gates on every change.
             </p>
-            <ul className="mt-6 flex list-none flex-col gap-5 p-0">
+            <ul className="mt-6 grid list-none gap-x-12 gap-y-5 p-0 sm:grid-cols-2">
               {BUDGETS.map((b) => (
-                <li key={b.label} className="flex items-baseline gap-3">
-                  <span className="shrink-0 font-display text-xs font-medium uppercase tracking-[0.12em] text-foreground">
-                    {b.label}
-                  </span>
-                  <span
-                    aria-hidden
-                    className="min-w-4 flex-1 border-b border-dotted border-muted-foreground/40"
-                  />
-                  <span className="shrink-0 text-right">
-                    <span className="block font-mono text-sm font-semibold text-acid">
+                <li key={b.label} className="flex flex-col gap-1">
+                  <div className="flex items-baseline gap-3">
+                    <span className="shrink-0 text-sm font-medium text-foreground">{b.label}</span>
+                    <span
+                      aria-hidden
+                      className="min-w-4 flex-1 border-b border-dotted border-muted-foreground/40"
+                    />
+                    <span className="shrink-0 font-mono text-sm font-semibold text-link">
                       {b.value}
                     </span>
-                    <span className="mt-0.5 hidden font-mono text-2xs text-muted-foreground sm:block">
-                      {b.detail}
-                    </span>
-                  </span>
+                  </div>
+                  <span className="font-mono text-2xs text-muted-foreground">{b.detail}</span>
                 </li>
               ))}
             </ul>

@@ -29,7 +29,7 @@ export function CopyButton({text, className}: {text: string; className?: string}
         'text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground',
         className,
       )}>
-      {copied ? <Check className="size-4 text-acid" /> : <Copy className="size-4" />}
+      {copied ? <Check className="size-4 text-live" /> : <Copy className="size-4" />}
     </button>
   );
 }

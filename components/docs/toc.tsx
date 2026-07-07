@@ -7,7 +7,7 @@ export default function Toc({headings}: {headings: Doc['headings']}): ReactNode 
   if (headings.length === 0) return null;
   return (
     <nav aria-label="On this page" className="flex flex-col gap-2">
-      <span className="font-display text-2xs font-semibold uppercase tracking-[0.18em] text-foreground/70">
+      <span className="font-mono text-2xs font-semibold uppercase tracking-[0.18em] text-foreground/70">
         On this page
       </span>
       {headings.map((h) => (

@@ -6,29 +6,26 @@ import Link from 'next/link';
    composing these rather than re-styling from scratch. */
 
 /**
- * The one CTA shape: squared-off (6px), uppercase display-font label with
- * astral-style letterspacing. `acid` is the loudest tier, `white` the hero
- * tier, `outline` the quiet sibling.
+ * The one CTA shape, matching the app's buttons: 10px radius, sentence-case
+ * medium label. `primary` is Kubernetes blue, `outline` the quiet sibling.
  */
 export function CtaButton({
   to,
   href,
-  variant = 'acid',
+  variant = 'primary',
   children,
   className,
 }: {
   to?: string;
   href?: string;
-  variant?: 'acid' | 'white' | 'outline';
+  variant?: 'primary' | 'outline';
   children: ReactNode;
   className?: string;
 }): ReactNode {
   const classes = clsx(
-    'inline-flex h-12 items-center justify-center rounded-md px-6',
-    'font-display text-[13px] font-medium uppercase tracking-[0.1em]',
+    'inline-flex h-11 items-center justify-center rounded-lg px-6 text-sm font-medium',
     'no-underline transition-colors',
-    variant === 'acid' && 'bg-acid text-acid-foreground hover:bg-acid/85',
-    variant === 'white' && 'bg-foreground text-canvas hover:bg-foreground/85',
+    variant === 'primary' && 'bg-primary text-primary-foreground hover:bg-primary/90',
     variant === 'outline' && 'border border-input text-foreground hover:bg-white/5',
     className,
   );
@@ -43,25 +40,58 @@ export function CtaButton({
   );
 }
 
-/** Small squared badge in mono - e.g. the version tag in the hero. */
+/** Small pill badge in mono - e.g. the version tag in the hero. */
 export function Pill({children}: {children: ReactNode}): ReactNode {
   return (
-    <span className="inline-flex items-center gap-2 rounded-md border border-input px-3 py-1.5 font-mono text-xs text-muted-foreground">
+    <span className="inline-flex items-center gap-2 rounded-full border border-input bg-card/60 px-3.5 py-1.5 font-mono text-xs text-muted-foreground backdrop-blur">
       {children}
     </span>
   );
 }
 
-/** The wordmark, reused in navbar/footer/hero: squared display caps. */
-export function Wordmark({className}: {className?: string}): ReactNode {
+/** Brand gradient text (blue -> foreground). Use sparingly on key words. */
+export function GradientText({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}): ReactNode {
   return (
-    <span className={clsx('font-display font-semibold uppercase tracking-[0.04em]', className)}>
-      clustrail
+    <span
+      className={clsx(
+        'bg-gradient-to-br from-link via-primary to-primary bg-clip-text text-transparent',
+        className,
+      )}>
+      {children}
     </span>
   );
 }
 
-/** Section heading block: acid kicker + display title + optional lede. */
+/** The two-tone brand wordmark, reused in navbar/footer/ghost. */
+export function Wordmark({
+  className,
+  tone = 'brand',
+}: {
+  className?: string;
+  /** `brand` is the two-tone lockup; `ghost` is single-color for watermarks. */
+  tone?: 'brand' | 'ghost';
+}): ReactNode {
+  return (
+    <span className={clsx('font-semibold tracking-tight', className)}>
+      {tone === 'brand' ? (
+        <>
+          <span className="text-link">Clus</span>
+          <span className="text-foreground">trail</span>
+        </>
+      ) : (
+        'Clustrail'
+      )}
+    </span>
+  );
+}
+
+/** Section heading block: mono kicker + title + optional lede. */
 export function SectionHeader({
   kicker,
   title,
@@ -79,10 +109,10 @@ export function SectionHeader({
         'flex flex-col',
         align === 'center' ? 'items-center text-center' : 'items-start',
       )}>
-      <span className="font-display text-xs font-medium uppercase tracking-[0.25em] text-acid">
+      <span className="font-mono text-xs font-medium uppercase tracking-[0.2em] text-link">
         {kicker}
       </span>
-      <h2 className="mt-4 max-w-2xl font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+      <h2 className="mt-4 max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
         {title}
       </h2>
       {lede && (
@@ -93,82 +123,9 @@ export function SectionHeader({
 }
 
 /**
- * Astral-style Bayer-dither strip: a stepped run of pixel squares whose
- * density decays along the run. Colored via currentColor - place with a
- * text-* class (usually text-acid). Density steps are three checkerboard
- * patterns at 50% / 25% / 6%.
- */
-export function DitherStrip({
-  id,
-  className,
-  flip = false,
-}: {
-  /** Unique per instance - SVG pattern ids are document-global. */
-  id: string;
-  className?: string;
-  flip?: boolean;
-}): ReactNode {
-  return (
-    <svg
-      viewBox="0 0 288 48"
-      aria-hidden
-      className={className}
-      style={flip ? {transform: 'scaleX(-1)'} : undefined}>
-      <defs>
-        <pattern id={`${id}-d50`} width="12" height="12" patternUnits="userSpaceOnUse">
-          <rect width="6" height="6" fill="currentColor" />
-          <rect x="6" y="6" width="6" height="6" fill="currentColor" />
-        </pattern>
-        <pattern id={`${id}-d25`} width="12" height="12" patternUnits="userSpaceOnUse">
-          <rect width="6" height="6" fill="currentColor" />
-        </pattern>
-        <pattern id={`${id}-d06`} width="24" height="24" patternUnits="userSpaceOnUse">
-          <rect x="6" y="6" width="6" height="6" fill="currentColor" />
-        </pattern>
-      </defs>
-      {/* Stepped silhouette: tall solid block, then thinner, sparser runs. */}
-      <rect x="0" y="0" width="96" height="48" fill={`url(#${id}-d50)`} />
-      <rect x="96" y="12" width="96" height="36" fill={`url(#${id}-d25)`} />
-      <rect x="192" y="24" width="96" height="24" fill={`url(#${id}-d06)`} />
-    </svg>
-  );
-}
-
-/**
- * The hero signature: a giant pixelated trail arc, echoing the swoosh logo
- * (clustrail = a trail around the cluster). A dithered ring segment that
- * fades out along its tail. Colored via currentColor.
- */
-export function PixelTrail({className}: {className?: string}): ReactNode {
-  return (
-    <svg viewBox="0 0 900 900" aria-hidden className={className} fill="none">
-      <defs>
-        <pattern id="pxtrail-checker" width="28" height="28" patternUnits="userSpaceOnUse">
-          <rect width="14" height="14" fill="currentColor" />
-          <rect x="14" y="14" width="14" height="14" fill="currentColor" />
-        </pattern>
-        <linearGradient id="pxtrail-fade" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0.1" stopColor="#fff" stopOpacity="0" />
-          <stop offset="0.9" stopColor="#fff" stopOpacity="1" />
-        </linearGradient>
-        <mask id="pxtrail-mask">
-          <rect width="900" height="900" fill="url(#pxtrail-fade)" />
-        </mask>
-      </defs>
-      <path
-        d="M 143 723 A 370 370 0 1 1 758 664"
-        stroke="url(#pxtrail-checker)"
-        strokeWidth="110"
-        mask="url(#pxtrail-mask)"
-      />
-    </svg>
-  );
-}
-
-/**
- * Flat astral-style frame around a product screenshot: hairline border,
- * squared 12px corners, and a slim mono address strip. `src` is a /public
- * path.
+ * Flat frame around a product screenshot: hairline border, a slim mono
+ * address strip, and status pips echoing the app's connection indicator.
+ * `src` is a /public path.
  */
 export function BrowserFrame({
   src,
@@ -186,11 +143,11 @@ export function BrowserFrame({
   return (
     <div
       className={clsx('overflow-hidden rounded-xl border border-border bg-card', className)}>
-      <div className="flex items-center gap-3 border-b border-border bg-black/20 px-4 py-2.5">
-        <span className="flex gap-1.5" aria-hidden>
-          <span className="size-2 rounded-[1px] bg-muted-foreground/40" />
-          <span className="size-2 rounded-[1px] bg-muted-foreground/40" />
-          <span className="size-2 rounded-[1px] bg-acid/70" />
+      <div className="flex items-center gap-3 border-b border-border bg-background/80 px-4 py-2.5">
+        <span className="flex items-center gap-1.5" aria-hidden>
+          <span className="size-2 rounded-full bg-muted-foreground/30" />
+          <span className="size-2 rounded-full bg-muted-foreground/30" />
+          <span className="size-2 rounded-full bg-live/80" />
         </span>
         <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">{url}</span>
       </div>

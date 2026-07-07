@@ -40,12 +40,12 @@ function ReleaseEntry({
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="font-mono text-xl font-semibold tracking-tight text-foreground">{tag}</h2>
         {latest && (
-          <span className="rounded-[4px] bg-acid px-2 py-0.5 font-display text-2xs font-semibold uppercase tracking-[0.08em] text-acid-foreground">
+          <span className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 font-mono text-2xs font-medium uppercase tracking-[0.08em] text-link">
             Latest
           </span>
         )}
         {prerelease && (
-          <span className="rounded-[4px] border border-border px-2 py-0.5 font-display text-2xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="rounded-full border border-border px-2.5 py-0.5 font-mono text-2xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
             Pre-release
           </span>
         )}
@@ -80,15 +80,15 @@ export default async function Changelog(): Promise<ReactNode> {
   return (
     <main className="mx-auto max-w-3xl px-6 py-20 sm:py-24">
       <header>
-        <span className="font-display text-xs font-medium uppercase tracking-[0.25em] text-acid">
+        <span className="font-mono text-xs font-medium uppercase tracking-[0.2em] text-link">
           Releases
         </span>
-        <h1 className="mt-4 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           Changelog
         </h1>
         <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
           Every Clustrail release, newest first. Install the latest with{' '}
-          <code className="rounded-[4px] border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[13px] text-foreground">
+          <code className="rounded-md border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[13px] text-foreground">
             curl -fsSL https://clustrail.github.io/install.sh | sh
           </code>
           .

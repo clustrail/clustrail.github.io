@@ -19,7 +19,7 @@ function ItemLink({item, active}: {item: NavItem; active: boolean}): ReactNode {
       className={clsx(
         'block rounded-[4px] border-l-2 py-1.5 pl-3 pr-2 text-sm no-underline transition-colors',
         active
-          ? 'border-acid bg-white/5 font-medium text-foreground'
+          ? 'border-primary bg-white/5 font-medium text-foreground'
           : 'border-transparent text-muted-foreground hover:text-foreground',
       )}>
       {item.label}
@@ -33,7 +33,7 @@ function NavTree({tree, pathname}: {tree: Array<NavItem | NavGroup>; pathname: s
       {tree.map((entry) =>
         'items' in entry ? (
           <div key={entry.href} className="mt-4 first:mt-0">
-            <span className="block px-3 pb-1.5 font-display text-2xs font-semibold uppercase tracking-[0.18em] text-foreground/70">
+            <span className="block px-3 pb-1.5 font-mono text-2xs font-semibold uppercase tracking-[0.18em] text-foreground/70">
               {entry.label}
             </span>
             <div className="flex flex-col gap-0.5">
@@ -64,12 +64,12 @@ export default function DocsSidebar({tree}: {tree: Array<NavItem | NavGroup>}): 
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex w-full cursor-pointer items-center justify-between rounded-md border border-border bg-card px-4 py-2.5 font-display text-xs font-medium uppercase tracking-[0.1em] text-foreground">
+          className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground">
           Docs menu
           <ChevronDown className={clsx('size-4 transition-transform', open && 'rotate-180')} />
         </button>
         {open && (
-          <div className="mt-2 rounded-md border border-border bg-card p-3">
+          <div className="mt-2 rounded-lg border border-border bg-card p-3">
             <NavTree tree={tree} pathname={pathname} />
           </div>
         )}

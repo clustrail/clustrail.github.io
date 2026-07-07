@@ -60,7 +60,7 @@ export default function Footer(): ReactNode {
           <div className="flex max-w-xs flex-col items-start gap-3">
             <Link href="/" className="flex items-center gap-2.5 no-underline">
               <img src="/favicon.svg" alt="" width={24} height={24} draggable={false} />
-              <Wordmark className="text-lg text-foreground" />
+              <Wordmark className="text-lg" />
             </Link>
             <p className="m-0 text-sm leading-relaxed text-muted-foreground">
               A Kubernetes UI on steroids. One binary, your kubeconfig, and a browser tab.
@@ -71,7 +71,7 @@ export default function Footer(): ReactNode {
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 sm:gap-16">
             {COLUMNS.map((col) => (
               <div key={col.title} className="flex flex-col gap-3">
-                <span className="font-display text-2xs font-semibold uppercase tracking-[0.2em] text-foreground/70">
+                <span className="font-mono text-2xs font-semibold uppercase tracking-[0.2em] text-foreground/70">
                   {col.title}
                 </span>
                 {col.links.map((link) => (
