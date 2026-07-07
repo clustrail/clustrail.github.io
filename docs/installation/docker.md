@@ -22,15 +22,15 @@ Mounting your `~/.kube` directory read-only at `/home/nonroot/.kube` gives the c
 ## Pin a version
 
 `latest` tracks the newest release.
-For anything durable, pin the tag:
+For anything durable, pin the tag; image tags carry no `v` prefix:
 
 ```sh
 docker run --rm -p 8080:8080 \
   -v ~/.kube:/home/nonroot/.kube:ro \
-  ghcr.io/clustrail/clustrail:v0.1.4
+  ghcr.io/clustrail/clustrail:0.1.5
 ```
 
-Available tags mirror the versions on the [changelog](/changelog).
+Available tags mirror the versions on the [changelog](/changelog), plus a moving minor tag (`0.1`).
 
 ## Reaching clusters from inside the container
 
