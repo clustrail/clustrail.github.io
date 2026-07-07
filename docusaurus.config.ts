@@ -45,8 +45,12 @@ const config: Config = {
     [
       'classic',
       {
-        // Landing page only for now; docs and blog come later.
-        docs: false,
+        docs: {
+          routeBasePath: '/docs',
+          sidebarPath: './sidebars.ts',
+          // The product is closed-source; docs pages carry no edit links.
+          editUrl: undefined,
+        },
         blog: false,
         theme: {
           customCss: './src/css/custom.css',
@@ -66,7 +70,10 @@ const config: Config = {
         alt: 'Clustrail',
         src: 'favicon.svg',
       },
-      items: [{to: '/changelog', label: 'Changelog', position: 'right'}],
+      items: [
+        {to: '/docs', label: 'Docs', position: 'right'},
+        {to: '/changelog', label: 'Changelog', position: 'right'},
+      ],
     },
     footer: {
       copyright: '© 2026 Clustrail',
