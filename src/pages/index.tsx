@@ -9,7 +9,7 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title="Clustrail - A Kubernetes UI on steroids"
-      description="Clustrail is a fast, lightweight web UI for Kubernetes, served from a single self-contained Go binary. Watch-based, virtualized, and RBAC-respecting.">
+      description="Clustrail is a Kubernetes UI on steroids: a fast, lightweight web UI served from a single self-contained Go binary. Watch-based, virtualized, and RBAC-respecting.">
       <main className="clustrail-landing bg-canvas">
         <Hero />
         <FeatureShowcase />
