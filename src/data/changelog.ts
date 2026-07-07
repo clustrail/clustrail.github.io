@@ -21,6 +21,16 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: Record<string, ChangelogEntry> = {
+  'v0.1.5': {
+    date: '2026-07-07T02:52:27Z',
+    notes: [
+      'The YAML editor now validates as you type: inline squiggles and gutter markers on parse errors, a status footer with cursor position, and Apply is blocked while the document is invalid.',
+      'A Diff toggle in the editor compares your draft against the live server version before you apply, and Revert restores it.',
+      'Security hardening: WebSocket endpoints now enforce a same-origin check, the cluster proxy strips impersonation headers, write request bodies are capped, and the managed-clusters kubeconfig is written atomically with owner-only permissions.',
+      'Stability fixes: a dead live-update connection is now detected and reconnected promptly, a failed subscription can no longer wedge the socket, and long sessions no longer accumulate stale list data in memory.',
+      'New documentation at clustrail.github.io/docs: setup, configuration, authentication, and a full feature tour.',
+    ],
+  },
   'v0.1.4': {
     date: '2026-07-06T21:15:36Z',
     notes: [
