@@ -1,5 +1,5 @@
-import {CHANGELOG} from '@site/src/data/changelog';
-import type {Release} from '@site/src/lib/releases';
+import {CHANGELOG} from '@/data/changelog';
+import type {Release} from '@/lib/releases';
 
 // Single source of truth for "what is the latest version" across the site (the
 // hero badge and the changelog's "Latest" flag).

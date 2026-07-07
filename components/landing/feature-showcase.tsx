@@ -1,3 +1,5 @@
+'use client';
+
 import {useState, type ReactNode} from 'react';
 import clsx from 'clsx';
 import {
@@ -9,7 +11,7 @@ import {
   Table2,
   type LucideIcon,
 } from 'lucide-react';
-import {BrowserFrame, SectionHeader} from '@site/src/components/site/primitives';
+import {BrowserFrame, SectionHeader} from '@/components/primitives';
 
 type Feature = {
   id: string;
@@ -49,7 +51,8 @@ const FEATURES: Feature[] = [
     id: 'workspace',
     icon: Columns2,
     title: 'Split-pane workspace',
-    blurb: 'Open any resource in a pane beside the list - overview, live YAML, events, logs and in-browser exec.',
+    blurb:
+      'Open any resource in a pane beside the list - overview, live YAML, events, logs and in-browser exec.',
     shot: '/shots/detail.png',
     url: 'localhost:8080/clusters/kind-clustrail/pods',
   },
@@ -76,11 +79,11 @@ export default function FeatureShowcase(): ReactNode {
   const active = FEATURES.find((f) => f.id === activeId) ?? FEATURES[0];
 
   return (
-    <section className="py-20 sm:py-28">
+    <section className="border-t border-border/60 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeader
-          kicker="EXPLORE"
-          title="Everything in one fast pane."
+          kicker="Explore"
+          title="Everything in one fast pane"
           lede="Live watch data, virtualized tables, a split-pane workspace with live YAML, streaming logs, events and topology."
         />
 
@@ -102,23 +105,23 @@ export default function FeatureShowcase(): ReactNode {
                   aria-selected={isActive}
                   onClick={() => setActiveId(feature.id)}
                   className={clsx(
-                    'group flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                    'group flex w-full cursor-pointer items-start gap-3 rounded-md p-3 text-left transition-colors',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas',
                     isActive
                       ? 'border border-border bg-card'
-                      : 'border border-transparent text-muted-foreground hover:bg-accent/50',
+                      : 'border border-transparent text-muted-foreground hover:bg-white/5',
                   )}>
                   <span
                     className={clsx(
-                      'flex size-8 shrink-0 items-center justify-center rounded-md bg-muted transition-colors',
-                      isActive ? 'text-primary' : 'text-muted-foreground',
+                      'flex size-8 shrink-0 items-center justify-center rounded-md transition-colors',
+                      isActive ? 'bg-acid/15 text-acid' : 'bg-white/5 text-muted-foreground',
                     )}>
                     <Icon className="size-4.5" />
                   </span>
                   <span className="min-w-0">
                     <span
                       className={clsx(
-                        'block text-sm font-semibold',
+                        'block font-display text-sm font-semibold',
                         isActive ? 'text-foreground' : 'text-foreground/80',
                       )}>
                       {feature.title}
@@ -134,16 +137,7 @@ export default function FeatureShowcase(): ReactNode {
 
           {/* Right: active screenshot */}
           <div className="relative min-w-0">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-4 -z-10 rounded-3xl bg-primary/10 blur-3xl"
-            />
-            <BrowserFrame
-              key={active.id}
-              src={active.shot}
-              alt={active.title}
-              url={active.url}
-            />
+            <BrowserFrame key={active.id} src={active.shot} alt={active.title} url={active.url} />
           </div>
         </div>
       </div>

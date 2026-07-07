@@ -10,10 +10,8 @@ When OIDC is configured, the login screen gains a **Sign in with SSO** button.
 Clicking it runs a standard authorization-code flow with PKCE against your issuer; on return, the verified ID token becomes the user's bearer credential to the clusters, stored in a secure HTTP-only cookie.
 Sessions refresh automatically while the provider allows it.
 
-:::note
-For Clustrail's OIDC login to also govern what users can do in Kubernetes, your clusters' API servers must trust the same issuer (the standard `oidc-*` API server flags or your managed provider's OIDC settings).
-Clustrail forwards the ID token as the bearer token; the cluster maps it to a user and applies RBAC.
-:::
+> **Note:** For Clustrail's OIDC login to also govern what users can do in Kubernetes, your clusters' API servers must trust the same issuer (the standard `oidc-*` API server flags or your managed provider's OIDC settings).
+> Clustrail forwards the ID token as the bearer token; the cluster maps it to a user and applies RBAC.
 
 ## Configuration
 
