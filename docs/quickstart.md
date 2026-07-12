@@ -12,7 +12,7 @@ This page covers the desktop workflow; for running it inside a cluster see [In-c
 On macOS or Linux, the install script detects your platform, verifies the release checksum, and installs the binary to `/usr/local/bin`:
 
 ```sh
-curl -fsSL https://clustrail.github.io/install.sh | sh
+curl -fsSL https://clustrail.io/install.sh | sh
 ```
 
 Prefer Homebrew?

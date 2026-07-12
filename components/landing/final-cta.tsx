@@ -26,6 +26,16 @@ export default function FinalCta(): ReactNode {
             Browse docs
           </CtaButton>
         </div>
+        <p className="mt-6 text-sm text-muted-foreground">
+          Open source under AGPL-3.0.{' '}
+          <a
+            href="https://github.com/clustrail/clustrail"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-link transition-colors hover:underline">
+            View the source on GitHub
+          </a>
+        </p>
       </div>
 
       {/* Giant ghost wordmark, edge-faded. */}

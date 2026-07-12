@@ -5,7 +5,7 @@ import Footer from '@/components/footer';
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://clustrail.github.io'),
+  metadataBase: new URL('https://clustrail.io'),
   title: {
     default: 'Clustrail - A Kubernetes UI on steroids',
     template: '%s | Clustrail',

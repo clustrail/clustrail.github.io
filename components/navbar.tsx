@@ -2,7 +2,7 @@ import type {ReactNode} from 'react';
 import Link from 'next/link';
 import {Wordmark} from '@/components/primitives';
 
-const GITHUB_URL = 'https://github.com/clustrail/clustrail.github.io';
+const GITHUB_URL = 'https://github.com/clustrail/clustrail';
 
 function NavLink({href, children}: {href: string; children: ReactNode}): ReactNode {
   return (

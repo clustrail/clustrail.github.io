@@ -11,7 +11,7 @@ Install the `clustrail` binary on your machine and run it against the clusters i
 The recommended path on macOS and Linux:
 
 ```sh
-curl -fsSL https://clustrail.github.io/install.sh | sh
+curl -fsSL https://clustrail.io/install.sh | sh
 ```
 
 The script:
@@ -25,10 +25,10 @@ Two environment variables customize it:
 
 ```sh
 # Install a specific version instead of the latest.
-CLUSTRAIL_VERSION=v0.1.4 curl -fsSL https://clustrail.github.io/install.sh | sh
+CLUSTRAIL_VERSION=v0.1.4 curl -fsSL https://clustrail.io/install.sh | sh
 
 # Install somewhere else (no sudo needed for a user-writable dir).
-BINDIR=$HOME/.local/bin curl -fsSL https://clustrail.github.io/install.sh | sh
+BINDIR=$HOME/.local/bin curl -fsSL https://clustrail.io/install.sh | sh
 ```
 
 ## Homebrew
@@ -43,12 +43,12 @@ Upgrades follow your normal Homebrew flow (`brew upgrade clustrail`).
 
 ## Manual download
 
-Download the archive for your platform from the [releases page](https://github.com/clustrail/clustrail.github.io/releases), verify the checksum, and put the binary on your `PATH`.
+Download the archive for your platform from the [releases page](https://github.com/clustrail/clustrail/releases), verify the checksum, and put the binary on your `PATH`.
 
 ```sh
 # Example: Linux amd64, replace VERSION with the release you want.
-curl -fsSLO https://github.com/clustrail/clustrail.github.io/releases/download/vVERSION/clustrail_VERSION_linux_amd64.tar.gz
-curl -fsSLO https://github.com/clustrail/clustrail.github.io/releases/download/vVERSION/checksums.txt
+curl -fsSLO https://github.com/clustrail/clustrail/releases/download/vVERSION/clustrail_VERSION_linux_amd64.tar.gz
+curl -fsSLO https://github.com/clustrail/clustrail/releases/download/vVERSION/checksums.txt
 sha256sum -c checksums.txt --ignore-missing
 tar -xzf clustrail_VERSION_linux_amd64.tar.gz clustrail
 install -m 0755 clustrail /usr/local/bin/clustrail
@@ -56,7 +56,7 @@ install -m 0755 clustrail /usr/local/bin/clustrail
 
 ### Windows
 
-Download the `windows_amd64` zip from the [releases page](https://github.com/clustrail/clustrail.github.io/releases), extract `clustrail.exe`, and run it from a terminal:
+Download the `windows_amd64` zip from the [releases page](https://github.com/clustrail/clustrail/releases), extract `clustrail.exe`, and run it from a terminal:
 
 ```powershell
 .\clustrail.exe serve

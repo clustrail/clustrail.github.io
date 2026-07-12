@@ -3,7 +3,7 @@ import Link from 'next/link';
 import {BrowserFrame, CtaButton, GradientText, Pill} from '@/components/primitives';
 import {CopyButton} from '@/components/copy-button';
 
-const INSTALL_CMD = 'curl -fsSL https://clustrail.github.io/install.sh | sh';
+const INSTALL_CMD = 'curl -fsSL https://clustrail.io/install.sh | sh';
 
 export default function Hero({latest}: {latest: string}): ReactNode {
   return (

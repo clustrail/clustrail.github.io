@@ -89,7 +89,7 @@ export default async function Changelog(): Promise<ReactNode> {
         <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
           Every Clustrail release, newest first. Install the latest with{' '}
           <code className="rounded-md border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[13px] text-foreground">
-            curl -fsSL https://clustrail.github.io/install.sh | sh
+            curl -fsSL https://clustrail.io/install.sh | sh
           </code>
           .
         </p>

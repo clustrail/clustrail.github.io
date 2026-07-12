@@ -30,8 +30,9 @@ const COLUMNS: Array<{title: string; links: FooterLink[]}> = [
   {
     title: 'Support',
     links: [
-      {label: 'Report an issue', href: 'https://github.com/clustrail/clustrail.github.io/issues'},
-      {label: 'Releases', href: 'https://github.com/clustrail/clustrail.github.io/releases'},
+      {label: 'GitHub', href: 'https://github.com/clustrail/clustrail'},
+      {label: 'Report an issue', href: 'https://github.com/clustrail/clustrail/issues'},
+      {label: 'Releases', href: 'https://github.com/clustrail/clustrail/releases'},
     ],
   },
 ];

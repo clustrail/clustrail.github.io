@@ -6,8 +6,8 @@ sidebar_label: FAQ
 
 ### Is Clustrail open source?
 
-No.
-Clustrail is free to install and use, and its binaries, container images, and Helm chart are published publicly, but the source code is not public.
+Yes.
+Clustrail is licensed under AGPL-3.0-only, and the source code and issue tracker live at [github.com/clustrail/clustrail](https://github.com/clustrail/clustrail).
 
 ### What does it cost?
 
@@ -72,4 +72,4 @@ There is no migration step because there is no stored state.
 
 ### How do I report a bug or ask for a feature?
 
-Open an issue on the [issue tracker](https://github.com/clustrail/clustrail.github.io/issues).
+Open an issue on the [issue tracker](https://github.com/clustrail/clustrail/issues).

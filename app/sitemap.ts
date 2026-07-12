@@ -1,7 +1,7 @@
 import type {MetadataRoute} from 'next';
 import {allDocSlugs} from '@/lib/docs';
 
-const BASE = 'https://clustrail.github.io';
+const BASE = 'https://clustrail.io';
 
 export const dynamic = 'force-static';
 

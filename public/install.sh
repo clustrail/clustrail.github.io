@@ -1,7 +1,7 @@
 #!/bin/sh
 # Clustrail installer.
 #
-#   curl -fsSL https://clustrail.github.io/install.sh | sh
+#   curl -fsSL https://clustrail.io/install.sh | sh
 #
 # Detects OS/arch, downloads the matching release archive from GitHub,
 # verifies its sha256 against the release checksums, and installs the
@@ -12,7 +12,7 @@
 #   BINDIR             install directory; default: /usr/local/bin
 set -eu
 
-REPO="clustrail/clustrail.github.io"
+REPO="clustrail/clustrail"
 BINDIR="${BINDIR:-/usr/local/bin}"
 
 log() { printf 'clustrail: %s\n' "$*" >&2; }

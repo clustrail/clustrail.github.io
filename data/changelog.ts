@@ -28,7 +28,7 @@ export const CHANGELOG: Record<string, ChangelogEntry> = {
       'A Diff toggle in the editor compares your draft against the live server version before you apply, and Revert restores it.',
       'Security hardening: WebSocket endpoints now enforce a same-origin check, the cluster proxy strips impersonation headers, write request bodies are capped, and the managed-clusters kubeconfig is written atomically with owner-only permissions.',
       'Stability fixes: a dead live-update connection is now detected and reconnected promptly, a failed subscription can no longer wedge the socket, and long sessions no longer accumulate stale list data in memory.',
-      'New documentation at clustrail.github.io/docs: setup, configuration, authentication, and a full feature tour.',
+      'New documentation at clustrail.io/docs: setup, configuration, authentication, and a full feature tour.',
     ],
   },
   'v0.1.4': {

@@ -9,7 +9,7 @@ const CHANNELS = [
   {
     id: 'script',
     label: 'Script',
-    command: 'curl -fsSL https://clustrail.github.io/install.sh | sh',
+    command: 'curl -fsSL https://clustrail.io/install.sh | sh',
     hint: 'Detects your OS/arch, verifies the checksum, and installs to /usr/local/bin.',
   },
   {

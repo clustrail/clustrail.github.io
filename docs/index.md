@@ -47,8 +47,9 @@ The same binary serves two common setups:
   See the [Quickstart](quickstart.md).
 - **In-cluster**: deploy it once with the [Helm chart](installation/in-cluster.md) and share one URL with your team, with authentication modes to match your security model.
 
-Clustrail is free to install and use.
-The binary, container image, and Helm chart are published artifacts; the source code is not public.
+Clustrail is free to install and use, and it is open source under the AGPL-3.0-only license.
+The source code lives at [github.com/clustrail/clustrail](https://github.com/clustrail/clustrail), alongside the binary, container image, and Helm chart releases.
+Contributions are welcome; see the [contributing guide](https://github.com/clustrail/clustrail/blob/main/CONTRIBUTING.md) to get started.
 
 ## Next steps
 

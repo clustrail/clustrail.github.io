@@ -1,5 +1,5 @@
-// Build-time data source: the GitHub Releases published to this repo by the
-// release pipeline (goreleaser targets clustrail/clustrail.github.io).
+// Build-time data source: the GitHub Releases published to the source repo by
+// the release pipeline (goreleaser targets clustrail/clustrail).
 //
 // This is a BEST-EFFORT FALLBACK, not the source of truth. The site renders
 // its version, dates, and notes from the committed changelog
@@ -11,7 +11,7 @@
 // failed fetch degrades to an empty list - the site is still fully correct
 // from committed data.
 
-const REPO = 'clustrail/clustrail.github.io';
+const REPO = 'clustrail/clustrail';
 
 /** One published release, projected from the GitHub Releases API at build time. */
 export interface Release {
