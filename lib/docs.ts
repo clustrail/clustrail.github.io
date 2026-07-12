@@ -41,6 +41,7 @@ export const DOCS_NAV: Array<string | {category: string; items: string[]}> = [
   'quickstart',
   {category: 'installation', items: ['installation/local', 'installation/docker', 'installation/in-cluster']},
   'configuration',
+  'updates',
   {category: 'authentication', items: ['authentication/oidc', 'authentication/proxy-auth', 'authentication/cluster-oidc']},
   'clusters',
   {category: 'features', items: [
