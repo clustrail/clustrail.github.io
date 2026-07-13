@@ -6,20 +6,14 @@ import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import {ChevronDown} from 'lucide-react';
 import type {NavGroup, NavItem} from '@/lib/docs';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 
 /**
- * The docs navigation rail. A sticky column on desktop; a slide-in Sheet on
- * mobile. Active state follows the current pathname (usePathname island). The
- * active item is marked by a 2px primary left rail; group headers are quiet
- * sentence-case labels.
+ * The docs navigation rail. A sticky column on desktop; on mobile an inline
+ * disclosure - the trigger shows the current page and expands the tree in
+ * place, pushing the article down rather than sliding over it. Active state
+ * follows the current pathname (usePathname island). The active item is
+ * marked by a 2px primary left rail; group headers are quiet sentence-case
+ * labels.
  */
 
 function ItemLink({
@@ -85,38 +79,51 @@ function NavTree({
   );
 }
 
+/** The current page's sidebar label, for the mobile trigger. */
+function currentLabel(tree: Array<NavItem | NavGroup>, pathname: string): string | null {
+  for (const entry of tree) {
+    if ('items' in entry) {
+      const hit = entry.items.find((item) => item.href === pathname);
+      if (hit) return hit.label;
+    } else if (entry.href === pathname) {
+      return entry.label;
+    }
+  }
+  return null;
+}
+
 export default function DocsSidebar({tree}: {tree: Array<NavItem | NavGroup>}): ReactNode {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // Close the mobile Sheet after a client navigation.
+  // Collapse the mobile disclosure after a client navigation.
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
   return (
     <>
-      {/* Mobile: slide-in Sheet. */}
+      {/* Mobile: inline disclosure that expands in place. */}
       <div className="lg:hidden">
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <button
-              type="button"
-              className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-input">
-              Docs menu
-              <ChevronDown className="size-4" />
-            </button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72 gap-0 overflow-y-auto p-0">
-            <SheetHeader className="border-b border-border">
-              <SheetTitle>Documentation</SheetTitle>
-              <SheetDescription className="sr-only">Browse the documentation</SheetDescription>
-            </SheetHeader>
-            <div className="px-4 py-4">
-              <NavTree tree={tree} pathname={pathname} onNavigate={() => setOpen(false)} />
-            </div>
-          </SheetContent>
-        </Sheet>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="docs-menu"
+          onClick={() => setOpen((v) => !v)}
+          className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-input">
+          <span className="truncate">{currentLabel(tree, pathname) ?? 'Docs menu'}</span>
+          <ChevronDown
+            className={clsx('size-4 shrink-0 transition-transform', open && 'rotate-180')}
+            aria-hidden
+          />
+        </button>
+        {open && (
+          <div
+            id="docs-menu"
+            className="mt-2 max-h-[65dvh] overflow-y-auto rounded-lg border border-border bg-card px-4 py-4">
+            <NavTree tree={tree} pathname={pathname} onNavigate={() => setOpen(false)} />
+          </div>
+        )}
       </div>
 
       {/* Desktop: rail (stickiness owned by the layout column). */}
