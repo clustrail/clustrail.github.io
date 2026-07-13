@@ -40,10 +40,11 @@ Clustrail follows one of two release channels:
 | Channel | Meaning |
 | --- | --- |
 | `stable` (default) | Final releases only, e.g. `v0.2.0`. |
-| `edge` | Includes prereleases, e.g. `v0.2.0-rc.1`, as soon as they are published. |
+| `nightly` | The scheduled prerelease builds cut from `main` every night there are new commits, e.g. `v0.2.1-nightly.20260714`, plus any release candidates. |
 
-Select the channel with `--update-channel stable` or `--update-channel edge` (config key `update-channel`).
-The `edge` channel falls back to the newest stable release when no newer prerelease exists, so it is never behind `stable`.
+Select the channel with `--update-channel stable` or `--update-channel nightly` (config key `update-channel`).
+The `nightly` channel falls back to the newest stable release when no newer prerelease exists, so it is never behind `stable`.
+Nightly builds never move the `latest` container tag and are never offered to Homebrew; they exist for trying tomorrow's build today, not for production.
 
 ## One-click self-update
 

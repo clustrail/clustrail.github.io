@@ -11,8 +11,9 @@ import {latestTag, versionKey} from '@/lib/version';
  *
  * The `stable` channel version is derived with the exact same rule as the
  * site's version badge (lib/version.ts latestTag), so the manifest and the
- * badge can never disagree. The `edge` channel additionally considers
- * prerelease tags, using full semver precedence.
+ * badge can never disagree. The `nightly` channel additionally considers
+ * prerelease tags (the scheduled nightly builds), using full semver
+ * precedence.
  *
  * The {tag}/{version}/{os}/{arch}/{ext} tokens in archiveUrlTemplate and
  * checksumsUrl are LITERAL placeholders expanded by the binary, never here.
@@ -109,12 +110,13 @@ export async function GET(): Promise<Response> {
   // skipped), so the two can never disagree within one build.
   const stableTag = latestTag(releases);
 
-  // edge: the newest known tag INCLUDING prereleases, by full semver
+  // nightly: the newest known tag INCLUDING prereleases (the scheduled
+  // -nightly.YYYYMMDD builds, plus any release candidates), by full semver
   // precedence; identical to stable when nothing newer exists.
   const allTags = Array.from(
     new Set([...Object.keys(CHANGELOG), ...releases.map((r) => r.tag)]),
   ).sort(comparePrecedenceDesc);
-  const edgeTag =
+  const nightlyTag =
     allTags.find((t) => comparePrecedenceDesc(t, stableTag) < 0) ?? stableTag;
 
   const stable = channelFor(stableTag, releases);
@@ -123,7 +125,7 @@ export async function GET(): Promise<Response> {
     generatedAt: new Date().toISOString(),
     channels: {
       stable,
-      edge: edgeTag === stableTag ? stable : channelFor(edgeTag, releases),
+      nightly: nightlyTag === stableTag ? stable : channelFor(nightlyTag, releases),
     },
   };
 
