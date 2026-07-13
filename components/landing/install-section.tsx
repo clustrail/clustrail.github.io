@@ -84,10 +84,9 @@ function CodeCard({code, filename}: {code: string; filename: string}): ReactNode
 
 export default function InstallSection(): ReactNode {
   return (
-    <RevealSection id="install" className="scroll-mt-20 border-t border-border/60 py-20 sm:py-28">
+    <RevealSection id="install" className="scroll-mt-20 border-b border-border py-20 sm:py-28">
       <div className="mx-auto max-w-2xl px-6">
         <SectionHeader
-          index="06"
           align="left"
           kicker="Install"
           title="Get Clustrail"
