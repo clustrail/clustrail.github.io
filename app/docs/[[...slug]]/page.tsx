@@ -6,8 +6,10 @@ import {MDXRemote} from 'next-mdx-remote/rsc';
 import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
 import rehypePrettyCode from 'rehype-pretty-code';
+import {ArrowLeft, ArrowRight} from 'lucide-react';
 import Toc from '@/components/docs/toc';
-import {allDocSlugs, getDoc, resolveDocHref} from '@/lib/docs';
+import CodeBlock from '@/components/docs/code-block';
+import {allDocSlugs, getDoc, resolveDocHref, DOCS_NAV} from '@/lib/docs';
 
 interface Props {
   params: Promise<{slug?: string[]}>;
@@ -20,6 +22,10 @@ export function generateStaticParams(): Array<{slug?: string[]}> {
   return allDocSlugs().map((slug) => (slug.length ? {slug} : {slug: []}));
 }
 
+function slugHref(slug: string[]): string {
+  return slug.length ? `/docs/${slug.join('/')}` : '/docs';
+}
+
 export async function generateMetadata({params}: Props): Promise<Metadata> {
   const {slug = []} = await params;
   const doc = getDoc(slug);
@@ -27,7 +33,36 @@ export async function generateMetadata({params}: Props): Promise<Metadata> {
   return {
     title: doc.title,
     description: doc.description,
+    alternates: {canonical: slug.length ? `/docs/${slug.join('/')}` : '/docs'},
   };
+}
+
+/**
+ * The mono kicker over a page: the label of the nav group the doc belongs to
+ * (e.g. "Installation", "Features"), or "Documentation" for a top-level page.
+ */
+function navGroupLabel(slug: string[]): string {
+  const path = slug.join('/');
+  for (const entry of DOCS_NAV) {
+    if (typeof entry === 'string') continue;
+    if (entry.category === path || entry.items.includes(path)) {
+      return getDoc(entry.category.split('/'))?.title ?? entry.category;
+    }
+  }
+  return 'Documentation';
+}
+
+/** Previous/next in the flattened DOCS_NAV reading order. */
+function siblings(slug: string[]): {
+  prev: {href: string; label: string} | null;
+  next: {href: string; label: string} | null;
+} {
+  const flat = allDocSlugs();
+  const key = slug.join('/');
+  const i = flat.findIndex((s) => s.join('/') === key);
+  const at = (s: string[] | undefined) =>
+    s ? {href: slugHref(s), label: getDoc(s)?.sidebarLabel || getDoc(s)?.title || s.join('/')} : null;
+  return {prev: i > 0 ? at(flat[i - 1]) : null, next: i >= 0 ? at(flat[i + 1]) : null};
 }
 
 /** Per-doc MDX components: relative .md links resolve to their routes. */
@@ -46,6 +81,8 @@ function mdxComponents(dirSlug: string[]) {
         </Link>
       );
     },
+    // Highlighted code blocks get a copy button (client wrapper).
+    pre: (props: React.ComponentPropsWithoutRef<'pre'>) => <CodeBlock {...props} />,
     // Tables scroll inside their own container instead of the page.
     table: (props: React.ComponentPropsWithoutRef<'table'>) => (
       <div className="overflow-x-auto">
@@ -60,10 +97,26 @@ export default async function DocPage({params}: Props): Promise<ReactNode> {
   const doc = getDoc(slug);
   if (!doc) notFound();
 
+  const kicker = navGroupLabel(slug);
+  const {prev, next} = siblings(slug);
+
   return (
-    <div className="grid min-w-0 gap-10 xl:grid-cols-[minmax(0,1fr)_13rem]">
-      <article className="prose prose-invert docs-prose min-w-0 max-w-3xl prose-headings:scroll-mt-24">
-        <h1 className="text-3xl font-semibold tracking-tight">{doc.title}</h1>
+    <div className="grid min-w-0 gap-12 xl:grid-cols-[minmax(0,1fr)_13rem]">
+      <article className="prose docs-prose min-w-0 max-w-none prose-headings:scroll-mt-24">
+        <header className="not-prose mb-10">
+          <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-link">
+            {kicker}
+          </p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+            {doc.title}
+          </h1>
+          {doc.description && (
+            <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+              {doc.description}
+            </p>
+          )}
+        </header>
+
         <MDXRemote
           source={doc.body}
           components={mdxComponents(doc.dirSlug)}
@@ -77,6 +130,37 @@ export default async function DocPage({params}: Props): Promise<ReactNode> {
             },
           }}
         />
+
+        {(prev || next) && (
+          <nav
+            aria-label="Pagination"
+            className="not-prose mt-16 grid gap-3 border-t border-border pt-8 sm:grid-cols-2">
+            {prev ? (
+              <Link
+                href={prev.href}
+                className="group flex flex-col gap-1 rounded-lg border border-border p-4 no-underline transition-colors hover:border-input">
+                <span className="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+                  <ArrowLeft className="size-3" /> Previous
+                </span>
+                <span className="text-sm font-medium text-foreground">{prev.label}</span>
+              </Link>
+            ) : (
+              <span />
+            )}
+            {next ? (
+              <Link
+                href={next.href}
+                className="group flex flex-col items-end gap-1 rounded-lg border border-border p-4 text-right no-underline transition-colors hover:border-input sm:col-start-2">
+                <span className="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+                  Next <ArrowRight className="size-3" />
+                </span>
+                <span className="text-sm font-medium text-foreground">{next.label}</span>
+              </Link>
+            ) : (
+              <span className="sm:col-start-2" />
+            )}
+          </nav>
+        )}
       </article>
 
       <aside className="hidden xl:block">
