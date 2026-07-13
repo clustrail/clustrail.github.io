@@ -1,14 +1,20 @@
 import type {Metadata} from 'next';
 import type {ReactNode} from 'react';
 import Link from 'next/link';
+import {CopyButton} from '@/components/copy-button';
 import {CHANGELOG} from '@/data/changelog';
 import {fetchReleases} from '@/lib/releases';
 import {allKnownTags, latestTag} from '@/lib/version';
+
+const INSTALL_CMD = 'curl -fsSL https://clustrail.io/install.sh | sh';
 
 export const metadata: Metadata = {
   title: 'Changelog',
   description:
     'Every Clustrail release, newest first - with a short summary of what changed.',
+  alternates: {
+    canonical: '/changelog',
+  },
 };
 
 /** Format an ISO timestamp deterministically (UTC). */
@@ -36,9 +42,24 @@ function ReleaseEntry({
   latest: boolean;
 }): ReactNode {
   return (
-    <article className="border-t border-border/60 py-8 first:border-t-0 first:pt-0">
+    <li className="relative pb-16 pl-10 last:pb-0">
+      {/* Timeline node: the latest release pulses live, the rest are quiet
+          hairline dots seated on the rail. */}
+      <span className="absolute top-1 left-0 flex size-6 -translate-x-1/2 items-center justify-center">
+        {latest ? (
+          <span className="relative flex size-3">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-60" />
+            <span className="relative inline-flex size-3 rounded-full bg-live" />
+          </span>
+        ) : (
+          <span className="size-2.5 rounded-full border border-border bg-canvas" />
+        )}
+      </span>
+
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="font-mono text-xl font-semibold tracking-tight text-foreground">{tag}</h2>
+        <span className="rounded-md border border-border bg-card px-2.5 py-1 font-mono text-sm font-semibold tracking-tight text-foreground">
+          {tag}
+        </span>
         {latest && (
           <span className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 font-mono text-2xs font-medium uppercase tracking-[0.08em] text-link">
             Latest
@@ -49,18 +70,22 @@ function ReleaseEntry({
             Pre-release
           </span>
         )}
-        <span className="text-sm text-muted-foreground">{formatDate(date)}</span>
       </div>
+
+      <time className="mt-2 block font-mono text-2xs uppercase tracking-[0.12em] text-muted-foreground">
+        {formatDate(date)}
+      </time>
+
       {notes?.length ? (
-        <ul className="mt-4 ml-4 flex list-disc flex-col gap-2 marker:text-muted-foreground/60">
+        <ul className="mt-5 ml-4 flex list-disc flex-col gap-2.5 marker:text-muted-foreground/50">
           {notes.map((note, i) => (
-            <li key={i} className="pl-1 text-[15px] leading-relaxed text-muted-foreground">
+            <li key={i} className="pl-1.5 text-[15px] leading-relaxed text-muted-foreground">
               {note}
             </li>
           ))}
         </ul>
       ) : null}
-    </article>
+    </li>
   );
 }
 
@@ -87,15 +112,20 @@ export default async function Changelog(): Promise<ReactNode> {
           Changelog
         </h1>
         <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
-          Every Clustrail release, newest first. Install the latest with{' '}
-          <code className="rounded-md border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[13px] text-foreground">
-            curl -fsSL https://clustrail.io/install.sh | sh
-          </code>
-          .
+          Every Clustrail release, newest first. Install the latest with a single command.
         </p>
+
+        {/* Install hint - matches the hero's one-line install. */}
+        <div className="mt-6 flex h-11 w-full max-w-md items-center gap-2 rounded-lg border border-input bg-card/60 pr-1 pl-4 text-sm backdrop-blur sm:w-auto sm:max-w-none">
+          <span className="select-none font-mono text-link">$</span>
+          <code className="min-w-0 flex-1 truncate font-mono text-[13px] text-foreground">
+            {INSTALL_CMD}
+          </code>
+          <CopyButton text={INSTALL_CMD} />
+        </div>
       </header>
 
-      <div className="mt-12">
+      <div className="mt-16">
         {tags.length === 0 ? (
           <p className="text-[15px] text-muted-foreground">
             No releases yet. Check back soon, or see{' '}
@@ -105,20 +135,22 @@ export default async function Changelog(): Promise<ReactNode> {
             .
           </p>
         ) : (
-          tags.map((tag) => {
-            const entry = CHANGELOG[tag];
-            const release = byTag.get(tag);
-            return (
-              <ReleaseEntry
-                key={tag}
-                tag={tag}
-                notes={entry?.notes}
-                date={entry?.date ?? release?.publishedAt}
-                prerelease={Boolean(release?.prerelease)}
-                latest={tag === newest}
-              />
-            );
-          })
+          <ol className="relative ml-3 border-l border-border">
+            {tags.map((tag) => {
+              const entry = CHANGELOG[tag];
+              const release = byTag.get(tag);
+              return (
+                <ReleaseEntry
+                  key={tag}
+                  tag={tag}
+                  notes={entry?.notes}
+                  date={entry?.date ?? release?.publishedAt}
+                  prerelease={Boolean(release?.prerelease)}
+                  latest={tag === newest}
+                />
+              );
+            })}
+          </ol>
         )}
       </div>
     </main>
