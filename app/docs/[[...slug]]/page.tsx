@@ -8,6 +8,7 @@ import rehypeSlug from 'rehype-slug';
 import rehypePrettyCode from 'rehype-pretty-code';
 import {ArrowLeft, ArrowRight} from 'lucide-react';
 import Toc from '@/components/docs/toc';
+import {ThemedShot} from '@/components/primitives';
 import CodeBlock from '@/components/docs/code-block';
 import {allDocSlugs, getDoc, resolveDocHref, DOCS_NAV} from '@/lib/docs';
 
@@ -68,6 +69,24 @@ function siblings(slug: string[]): {
 /** Per-doc MDX components: relative .md links resolve to their routes. */
 function mdxComponents(dirSlug: string[]) {
   return {
+    // Product screenshots are committed as theme-paired -dark/-light siblings;
+    // a bare `/shots/<name>.png` reference renders the pair and the CSS keeps
+    // the one matching the visitor's theme visible. ThemedShot emits only
+    // <img> elements, so it is valid inside the paragraph MDX wraps it in.
+    img: ({src = '', alt = '', ...rest}: React.ComponentPropsWithoutRef<'img'>) => {
+      const shot = typeof src === 'string' && src.match(/^\/shots\/([a-z0-9-]+)\.png$/);
+      return shot ? (
+        <ThemedShot
+          stem={`/shots/${shot[1]}`}
+          alt={alt}
+          sizes="(max-width: 768px) 100vw, 768px"
+          className="rounded-xl border border-border"
+        />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={alt} {...rest} />
+      );
+    },
     a: ({href = '', children, ...rest}: React.ComponentPropsWithoutRef<'a'>) => {
       const resolved = resolveDocHref(dirSlug, href);
       const external = /^[a-z]+:/i.test(resolved);
