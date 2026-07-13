@@ -77,7 +77,7 @@ export default function FeatureShowcase(): ReactNode {
     <RevealSection className="border-t border-border/60 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeader
-          index="05"
+          index="04"
           kicker="Surface"
           title="Everything in one fast pane"
           lede="Live watch data, virtualized tables, a split-pane workspace with YAML, logs, events, topology and metrics."

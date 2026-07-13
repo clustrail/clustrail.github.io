@@ -87,7 +87,7 @@ export default function InstallSection(): ReactNode {
     <RevealSection id="install" className="scroll-mt-20 border-t border-border/60 py-20 sm:py-28">
       <div className="mx-auto max-w-2xl px-6">
         <SectionHeader
-          index="07"
+          index="06"
           align="left"
           kicker="Install"
           title="Get Clustrail"

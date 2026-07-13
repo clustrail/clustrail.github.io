@@ -3,7 +3,6 @@ import type {Metadata} from 'next';
 import Hero from '@/components/landing/hero';
 import {ResourceMarquee} from '@/components/landing/resource-marquee';
 import {MetricsBand} from '@/components/landing/metrics-band';
-import {ArchitectureSection} from '@/components/landing/architecture-section';
 import {WatchSection} from '@/components/landing/watch-section';
 import FeatureShowcase from '@/components/landing/feature-showcase';
 import {TrustSection} from '@/components/landing/trust-section';
@@ -30,7 +29,6 @@ export default async function Home(): Promise<ReactNode> {
       <Hero latest={latest} />
       <ResourceMarquee />
       <MetricsBand />
-      <ArchitectureSection />
       <WatchSection />
       <FeatureShowcase />
       <TrustSection />

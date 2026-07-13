@@ -39,7 +39,7 @@ export function Faq(): ReactNode {
   return (
     <RevealSection className="border-t border-border/60 py-20 sm:py-28">
       <div className="mx-auto max-w-2xl px-6">
-        <SectionHeader index="08" align="left" kicker="Questions" title="Frequently asked" />
+        <SectionHeader index="07" align="left" kicker="Questions" title="Frequently asked" />
 
         <Accordion type="single" collapsible className="reveal mt-10">
           {FAQS.map((f, i) => (

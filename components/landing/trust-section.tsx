@@ -37,7 +37,7 @@ export function TrustSection(): ReactNode {
     <RevealSection className="border-t border-border/60 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeader
-          index="06"
+          index="05"
           kicker="Rbac_upstream"
           title="It cannot see more than you can"
           lede="Clustrail is a gateway, not an authority. Your credentials go upstream; the API server decides."
