@@ -306,6 +306,14 @@
 
 /* ============================================================== effects */
 
+/* Scrollable strips that must not paint a scrollbar (e.g. the install tabs). */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* Dotted-grid backdrop - the same texture as the app's empty states. */
 .bg-dotgrid {
   background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0);

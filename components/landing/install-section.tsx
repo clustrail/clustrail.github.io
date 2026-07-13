@@ -59,7 +59,7 @@ function CommandRow({command}: {command: string}): ReactNode {
       <span aria-hidden className="select-none font-mono text-sm text-link">
         $
       </span>
-      <code className="flex-1 overflow-x-auto whitespace-nowrap px-2 py-1.5 font-mono text-[13px] text-foreground">
+      <code className="scrollbar-none flex-1 overflow-x-auto whitespace-nowrap px-2 py-1.5 font-mono text-[13px] text-foreground">
         {command}
       </code>
       <CopyButton text={command} />
@@ -75,7 +75,7 @@ function CodeCard({code, filename}: {code: string; filename: string}): ReactNode
         <span className="font-mono text-xs text-muted-foreground">{filename}</span>
         <CopyButton text={code} />
       </div>
-      <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed text-card-foreground">
+      <pre className="scrollbar-none overflow-x-auto p-4 font-mono text-[13px] leading-relaxed text-card-foreground">
         {code}
       </pre>
     </div>
@@ -94,7 +94,7 @@ export default function InstallSection(): ReactNode {
         />
 
         <Tabs defaultValue={CHANNELS[0].id} className="reveal mt-8 gap-4">
-          <TabsList className="w-fit max-w-full overflow-x-auto">
+          <TabsList className="scrollbar-none w-fit max-w-full overflow-x-auto">
             {CHANNELS.map((c) => (
               <TabsTrigger key={c.id} value={c.id} className="px-3.5">
                 {c.label}
