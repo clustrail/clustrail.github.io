@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {CtaButton, GradientText, Pill} from '@/components/primitives';
 import {RevealSection} from '@/components/landing/reveal-section';
 import {TypedInstall} from '@/components/landing/typed-install';
+import HeroBadges from '@/components/landing/hero-badges';
 
 /**
  * 01 HERO. Staged entrance: headline, subhead, CTAs, install line and the
@@ -74,6 +75,11 @@ export default function Hero({latest}: {latest: string}): ReactNode {
           style={{'--reveal-delay': '320ms'} as CSSProperties}>
           &lt; 8 ms watch deltas · 49 MB idle · one static binary
         </p>
+
+        {/* Social proof: stars + the Product Hunt page. */}
+        <div className="reveal mt-8" style={{'--reveal-delay': '400ms'} as CSSProperties}>
+          <HeroBadges />
+        </div>
       </div>
     </RevealSection>
   );
