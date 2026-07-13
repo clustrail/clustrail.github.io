@@ -91,13 +91,19 @@ export function Wordmark({
   );
 }
 
-/** Section heading block: mono kicker + title + optional lede. */
+/**
+ * Section heading block: numbered mono index + kicker + title + optional
+ * lede. The `index` ("01", "02"...) is the ctrlb-style section marker - the
+ * landing sections read as chapters of a spec sheet.
+ */
 export function SectionHeader({
+  index,
   kicker,
   title,
   lede,
   align = 'center',
 }: {
+  index?: string;
   kicker: string;
   title: ReactNode;
   lede?: ReactNode;
@@ -109,8 +115,13 @@ export function SectionHeader({
         'flex flex-col',
         align === 'center' ? 'items-center text-center' : 'items-start',
       )}>
-      <span className="font-mono text-xs font-medium uppercase tracking-[0.2em] text-link">
-        {kicker}
+      <span className="flex items-baseline gap-3 font-mono text-xs font-medium uppercase tracking-[0.2em]">
+        {index && (
+          <span className="text-muted-foreground/60" aria-hidden>
+            {index}
+          </span>
+        )}
+        <span className="text-link">{kicker}</span>
       </span>
       <h2 className="mt-4 max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
         {title}
@@ -119,6 +130,36 @@ export function SectionHeader({
         <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted-foreground">{lede}</p>
       )}
     </div>
+  );
+}
+
+/**
+ * Mono status label in the data plane's own vocabulary - `WATCH_CONNECTED`,
+ * `DELTAS_ONLY`, `RBAC_UPSTREAM`. `live` adds the pulsing green dot.
+ */
+export function StatusLabel({
+  children,
+  live = false,
+  className,
+}: {
+  children: ReactNode;
+  live?: boolean;
+  className?: string;
+}): ReactNode {
+  return (
+    <span
+      className={clsx(
+        'inline-flex items-center gap-2 font-mono text-2xs font-medium uppercase tracking-[0.18em] text-muted-foreground',
+        className,
+      )}>
+      {live && (
+        <span className="relative flex size-1.5" aria-hidden>
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-60" />
+          <span className="relative inline-flex size-1.5 rounded-full bg-live" />
+        </span>
+      )}
+      {children}
+    </span>
   );
 }
 
