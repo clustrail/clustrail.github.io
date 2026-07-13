@@ -1,13 +1,13 @@
 'use client';
 
 /*
- * ArchitectureDiagram: an isometric "platform with buildings" scene built from
- * real extruded CSS boxes (the ctrlb technique).
+ * ArchitectureDiagram: one centered isometric TOWER built from real extruded
+ * CSS boxes (the ctrlb technique), read bottom-up as the data plane.
  *
  * ONE tilted canvas: a fixed 640x460 div with transform-style: preserve-3d and
- * transform: rotateX(50deg) rotateZ(35deg), inside a perspective container,
- * scaled responsively by measuring the wrapper (transform: scale on a fixed
- * stage, so all 3D coordinates stay in one authored space).
+ * transform: rotateX(50deg) rotateZ(35deg), scaled responsively by measuring
+ * the wrapper (transform: scale on a fixed stage, so all 3D coordinates stay
+ * in one authored space).
  *
  * Every component is a TRUE extruded box, hand-built from three faces: an
  * absolutely positioned top-face div plus two wall divs - the front wall
@@ -16,32 +16,41 @@
  * transform-origin left, rotateY(90deg)) hanging from its right edge. Walls
  * carry a translucent black overlay so shading works in both themes.
  *
- * Composition maps clustrail's real data plane:
- *   - BASE PLATFORM (the biggest slab): the Go gateway, one static binary.
- *   - ON it, four extruded internals: MULTIPLEXER, INFORMER CACHE (larger),
- *     SWR MEMOIZERS, AUTH PROXY.
- *   - FLOATING ABOVE at z=190: the BROWSER SPA slab with NORMALIZED STORE and
- *     VIRTUALIZED TABLE micro-boxes on top.
- *   - OFF the platform's far-left flank at ground level: three apiserver
- *     chips (cluster-a/b/c).
- *   - The hero beam (multiplexer -> browser slab) stands up via
- *     rotateX(90deg) with transform-origin top and grows from height 0 on
- *     entrance; packets are bright segments running along its height. Flat
- *     glowing traces carry watch (apiservers -> cache) and snapshots + deltas
- *     (cache -> multiplexer).
+ * The tower: four altitudes on one vertical axis, narrowing upward.
+ *   - z=0..16   THE CLUSTER BASE: the widest, thinnest slab (your clusters'
+ *     apiservers) carrying the three cluster chips in a row near its front
+ *     edge (the back of the base sits under the gateway's silhouette).
+ *   - z=114..138 THE GO GATEWAY platform, centered over the base, strongest
+ *     edge glow - it is the product.
+ *   - ON the gateway, four extruded internals arranged in the L that stays
+ *     visible under the floating SPA slab (the slab's projected silhouette
+ *     hides the platform's back-left): AUTH PROXY, INFORMER CACHE and
+ *     MULTIPLEXER across the front band, SWR MEMOIZERS on the right flank.
+ *   - z=260..282 THE BROWSER SPA slab (smallest footprint) with the
+ *     NORMALIZED STORE and VIRTUALIZED TABLE micro-boxes on top.
  *
- * Labels live ON the top faces (mono uppercase, tilted with the canvas - the
- * legible ctrlb look); beam labels are counter-rotated billboards
- * (rotateZ(-35deg) rotateX(-50deg)) so they face the camera.
+ * Flows: three thin WATCH beams rise from the chips and vanish under the
+ * gateway (the middle one directly beneath the informer cache); the flat
+ * SNAPSHOTS + DELTAS trace bridges cache -> multiplexer on the platform; the
+ * hero WEBSOCKET beam (brightest, rising packets) climbs from the
+ * multiplexer to the SPA slab. Every beam terminus is SOLVED GEOMETRICALLY:
+ * the beam's height is computed so its projected top edge lands exactly on
+ * the projected front-bottom edge of the slab above it (Chrome drops clipped
+ * elements out of plane splitting, so nothing relies on overflow clipping).
  *
- * Interaction: four focusable tier buttons (browser slab, platform, cache
- * box, an invisible flat hit area over the apiserver column) drive the
- * aria-live explainer below the scene; the gateway's internal boxes hover-
- * select the gateway tier. Below md the 3D canvas hides (aria-hidden there is
- * moot - it is display:none) and a flat stacked tier-button list takes over.
+ * Soft dark drop-shadow planes lie on the surface below each floating level
+ * (positioned half-way along the occlusion shift so they peek out behind the
+ * standing boxes), keeping the altitudes legible in the light theme.
  *
- * Reduced motion renders everything settled (no rise, beams at full height,
- * no packets); off-viewport pauses the packet loops.
+ * Labels live ON the top faces (mono uppercase, tilted with the canvas);
+ * flow captions are flat 2D overlays pinned at precomputed projected
+ * coordinates so they stay crisp and never fight 3D occlusion.
+ *
+ * Interaction: four focusable tier buttons (cluster base, gateway platform,
+ * cache box, SPA slab) drive the aria-live explainer below the scene; the
+ * other internals and the chips hover-select their tier. Below md the 3D
+ * canvas hides and a flat stacked tier-button list takes over. Reduced
+ * motion renders everything settled; off-viewport pauses the packet loops.
  */
 
 import {useEffect, useRef, useState} from 'react';
@@ -104,13 +113,13 @@ const CANVAS_H = 460;
 const STAGE_W = 830;
 const STAGE_H = 560;
 const CANVAS_LEFT = (STAGE_W - CANVAS_W) / 2;
-const CANVAS_TOP = 82;
+const CANVAS_TOP = 112;
 const TILT = 'rotateX(50deg) rotateZ(35deg)';
 
 /* The scene renders orthographically (no perspective property), so this
  * projection of a canvas-space point (x, y, altitude z) to stage-space screen
- * coordinates is EXACT - it is how the caption overlay is pinned to beams and
- * traces without ever fighting 3D occlusion. Computed at authoring time. */
+ * coordinates is EXACT - it is how beam termini are solved and the caption
+ * overlay is pinned without ever fighting 3D occlusion. */
 const COS35 = Math.cos((35 * Math.PI) / 180);
 const SIN35 = Math.sin((35 * Math.PI) / 180);
 const COS50 = Math.cos((50 * Math.PI) / 180);
@@ -136,53 +145,70 @@ interface BoxGeom {
   depth: number;
 }
 
-/** The Go gateway: the base platform. Top face at z=30. */
-const PLATFORM: BoxGeom = {x: 90, y: 90, w: 500, h: 360, base: 0, depth: 30};
+/** TIER 1 - the cluster base: widest, thinnest slab at ground level. */
+const BASE: BoxGeom = {x: 60, y: 55, w: 520, h: 350, base: 0, depth: 16};
 
-/** Gateway internals standing on the platform (base = platform top). */
-const CACHE: BoxGeom = {x: 130, y: 130, w: 190, h: 115, base: 30, depth: 30};
-const MUX: BoxGeom = {x: 370, y: 130, w: 170, h: 115, base: 30, depth: 30};
-const AUTH: BoxGeom = {x: 150, y: 290, w: 140, h: 100, base: 30, depth: 26};
-const SWR: BoxGeom = {x: 370, y: 290, w: 140, h: 100, base: 30, depth: 26};
-
-/** The browser SPA slab floating above the multiplexer (pushed toward the
- *  far edge so it never crowds the multiplexer's face). */
-const SLAB: BoxGeom = {x: 300, y: 12, w: 290, h: 195, base: 166, depth: 24};
-const STORE: BoxGeom = {x: 318, y: 32, w: 118, h: 66, base: 190, depth: 16};
-const VTABLE: BoxGeom = {x: 448, y: 112, w: 126, h: 66, base: 190, depth: 16};
-
-/** Apiserver chips: a column off the platform's far-left flank, on the
- *  ground, extruded to the platform's height so the watch traces run flat. */
-const CHIP_W = 120;
-const CHIP_H = 54;
-const CHIPS: BoxGeom[] = [150, 270, 390].map((cy) => ({
-  x: -40,
-  y: cy - CHIP_H / 2,
+/** Apiserver chips in a row on the base's front band (even 25px margins and
+ *  gaps; the front strip below them carries the base label). */
+const CHIP_W = 140;
+const CHIP_H = 58;
+const CHIP_Y = 306;
+const CHIPS: BoxGeom[] = [85, 250, 415].map((cx) => ({
+  x: cx,
+  y: CHIP_Y,
   w: CHIP_W,
   h: CHIP_H,
-  base: 0,
-  depth: 30,
+  base: BASE.depth,
+  depth: 18,
 }));
 const CHIP_NAMES = ['cluster-a', 'cluster-b', 'cluster-c'];
 
-/** The hero beam: multiplexer top center up toward the slab underside.
- *  Its top altitude is authored so the beam's projected top edge lands
- *  EXACTLY on the slab front wall's projected bottom edge at the beam's
- *  screen x - the beam reads as vanishing under the slab without relying on
- *  browser plane splitting (which drops overflow-clipped elements). */
-const BEAM = (() => {
-  const x = MUX.x + MUX.w / 2; // 455
-  const y = MUX.y + MUX.h / 2; // 187.5
-  const z0 = MUX.base + MUX.depth; // 60
-  // Slab front wall bottom edge, projected.
-  const p1 = proj(SLAB.x, SLAB.y + SLAB.h, SLAB.base);
-  const p2 = proj(SLAB.x + SLAB.w, SLAB.y + SLAB.h, SLAB.base);
+/** TIER 2 - the Go gateway platform, floating at z=114, centered on the
+ *  tower axis (canvas 320, 230). */
+const PLATFORM: BoxGeom = {x: 100, y: 90, w: 440, h: 280, base: 114, depth: 24};
+
+/** Gateway internals on the platform top (z=138), arranged in the L that the
+ *  floating SPA slab's silhouette never hides: three across the front band
+ *  (24px side margins), one on the right flank. The middle watch beam rises
+ *  directly beneath the informer cache. */
+const AUTH: BoxGeom = {x: 124, y: 222, w: 100, h: 96, base: 138, depth: 24};
+const CACHE: BoxGeom = {x: 240, y: 222, w: 118, h: 96, base: 138, depth: 28};
+const MUX: BoxGeom = {x: 398, y: 222, w: 118, h: 96, base: 138, depth: 28};
+const SWR: BoxGeom = {x: 408, y: 122, w: 108, h: 76, base: 138, depth: 22};
+
+/** TIER 4 - the browser SPA slab: smallest footprint, top of the tower. */
+const SLAB: BoxGeom = {x: 171, y: 165, w: 298, h: 130, base: 260, depth: 22};
+const STORE: BoxGeom = {x: 185, y: 179, w: 126, h: 56, base: 282, depth: 14};
+const VTABLE: BoxGeom = {x: 329, y: 179, w: 126, h: 56, base: 282, depth: 14};
+
+/** A vertical beam terminus, solved geometrically: the beam's top altitude is
+ *  authored so its projected top edge lands EXACTLY on the projected
+ *  front-bottom edge of the floating box above it, at the beam's screen x -
+ *  the beam reads as vanishing under that slab without relying on browser
+ *  plane splitting (which drops overflow-clipped elements). */
+interface BeamGeom {
+  x: number;
+  y: number;
+  z0: number;
+  h: number;
+}
+function solveBeam(x: number, y: number, z0: number, over: BoxGeom): BeamGeom {
+  const p1 = proj(over.x, over.y + over.h, over.base);
+  const p2 = proj(over.x + over.w, over.y + over.h, over.base);
   const at = proj(x, y, 0);
   const t = (at.x - p1.x) / (p2.x - p1.x);
   const edgeY = p1.y + t * (p2.y - p1.y);
   const zTop = (at.y - edgeY) / SIN50; // screen-flush with the wall edge
-  return {x, y, z0, h: Math.round(zTop - z0)};
-})();
+  return {x, y, z0, h: Math.round((zTop - z0) * 10) / 10};
+}
+
+/** watch: one thin beam per chip, rising until it vanishes under the gateway. */
+const WATCH_BEAMS: BeamGeom[] = CHIPS.map((c) =>
+  solveBeam(c.x + CHIP_W / 2, CHIP_Y + CHIP_H / 2, c.base + c.depth, PLATFORM),
+);
+/** The hero WebSocket beam: multiplexer top face up to the SPA slab. */
+const HERO_AT = {x: 430, y: 300};
+const HERO = solveBeam(HERO_AT.x, HERO_AT.y, MUX.base + MUX.depth, SLAB);
 
 /** Flat glowing traces (lying in-plane at a given altitude). */
 interface TraceGeom {
@@ -202,14 +228,19 @@ function trace(x1: number, y1: number, x2: number, y2: number, z: number): Trace
     angle: Math.round((Math.atan2(dy, dx) * 180) / Math.PI * 100) / 100,
   z};
 }
-/** watch: each apiserver chip fans into the informer cache's left edge. */
-const WATCH_TRACES: TraceGeom[] = [
-  trace(78, 150, CACHE.x, 165, 31),
-  trace(78, 270, CACHE.x, 190, 31),
-  trace(78, 390, CACHE.x, 215, 31),
+/** snapshots + deltas: cache top -> multiplexer top, bridging the gap near
+ *  the boxes' front corners so the hero beam's glow never swallows it. */
+const SNAP_TRACE: TraceGeom = trace(CACHE.x + CACHE.w, 300, MUX.x, 300, 166);
+
+/** Soft drop shadows under the floating levels, lying flat on the surface
+ *  below, shifted half the occlusion offset toward the viewer so they peek
+ *  out behind the standing boxes (the fully "correct" shadow footprint is
+ *  itself hidden by the slab that casts it). Rects are trimmed to avoid
+ *  intersecting any standing box's walls. */
+const SHADOWS: Array<{x: number; y: number; w: number; h: number; z: number; delay: number}> = [
+  {x: 70, y: 60, w: 440, h: 238, z: BASE.depth + 1, delay: 480},      // gateway -> base
+  {x: 129, y: 105, w: 275, h: 113, z: PLATFORM.base + PLATFORM.depth + 1, delay: 930}, // slab -> gateway
 ];
-/** snapshots + deltas: cache top -> multiplexer top. */
-const SHORT_TRACE: TraceGeom = trace(CACHE.x + CACHE.w, 187.5, MUX.x, 187.5, 60);
 
 /** Flow captions: 2D overlay text pinned at exact projected coordinates
  *  (stage space), so they stay crisp and are never occluded by the boxes. */
@@ -224,28 +255,26 @@ interface Caption {
 const CAPTIONS: Caption[] = [
   {
     lines: ['watch'],
-    at: proj(104, 230, 31), // middle watch trace, midpoint
-    dx: -10,
-    dy: 12,
+    at: proj(WATCH_BEAMS[0].x, WATCH_BEAMS[0].y, 60), // left watch beam, upper half
+    dx: -12,
+    dy: -14,
     align: 'right',
   },
   {
     lines: ['snapshots + deltas'],
-    at: proj(345, 187.5, 60), // the cache -> multiplexer bridge, midpoint
-    dx: -12,
-    dy: 14,
+    at: proj(378, 300, SNAP_TRACE.z), // the cache -> multiplexer bridge, midpoint
+    dx: 18,
+    dy: 22,
     align: 'right',
   },
   {
     lines: ['one WebSocket', 'deltas only'],
-    at: proj(BEAM.x, BEAM.y, BEAM.z0 + BEAM.h / 2), // hero beam, mid-height
-    dx: 22,
-    dy: -2,
+    at: proj(HERO_AT.x, HERO_AT.y, 230), // hero beam, upper half
+    dx: 14,
+    dy: 2,
     align: 'left',
   },
 ];
-/** Overlay heading for the apiserver column. */
-const CHIP_HEADING = proj(20, 112, 30);
 
 /* ---- theme-token paints ----------------------------------------------------
  * Top faces are the card surface nudged toward foreground so they read on the
@@ -257,7 +286,14 @@ const FACE_BOX = 'color-mix(in oklch, var(--card), var(--foreground) 7%)';
 const FACE_CHIP = 'color-mix(in oklch, var(--card), var(--foreground) 5%)';
 const EDGE = 'var(--border)';
 const EDGE_ACCENT = 'color-mix(in oklch, var(--primary), transparent 45%)';
-const GLOW = '0 0 22px color-mix(in oklch, var(--primary), transparent 55%)';
+/** k8s-blue accent for the cluster base level. */
+const EDGE_K8S = 'color-mix(in oklch, var(--border), var(--primary) 30%)';
+/** Glow hierarchy: the gateway is the product (strongest, always on); the
+ *  SPA slab is subtle; the base is the faintest; selection promotes any tier
+ *  to the strong glow. */
+const GLOW_STRONG = '0 0 26px color-mix(in oklch, var(--primary), transparent 45%)';
+const GLOW_SOFT = '0 0 16px color-mix(in oklch, var(--primary), transparent 68%)';
+const GLOW_FAINT = '0 0 10px color-mix(in oklch, var(--primary), transparent 78%)';
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
@@ -324,7 +360,8 @@ function Extruded({
   geom: BoxGeom;
   fill: string;
   edge: string;
-  glow?: boolean;
+  /** Box-shadow string for the top face's edge glow. */
+  glow?: string;
   frontShade: number;
   rightShade: number;
   entrance: CSSProperties;
@@ -369,7 +406,7 @@ function Extruded({
           background: fill,
           border: `1px solid ${edge}`,
           borderRadius: 3,
-          boxShadow: glow ? GLOW : undefined,
+          boxShadow: glow,
           transition: 'box-shadow 200ms ease-out, border-color 200ms ease-out',
         }}>
         {children}
@@ -471,7 +508,7 @@ function Trace({
         boxShadow: '0 0 10px color-mix(in oklch, var(--primary), transparent 65%)',
         overflow: 'hidden',
         opacity: settled ? 1 : 0,
-        transition: 'opacity 500ms ease-out 900ms',
+        transition: 'opacity 500ms ease-out 1150ms',
         pointerEvents: 'none',
       }}>
       {!reduced && (
@@ -494,6 +531,78 @@ function Trace({
           }
         />
       )}
+    </div>
+  );
+}
+
+/** A vertical beam standing up via rotateX(90deg) with transform-origin top,
+ *  growing from height 0 on entrance; packets are bright segments rising
+ *  along its height. `hero` is the bright WebSocket beam; otherwise the
+ *  modest watch style. */
+function VBeam({
+  geom,
+  hero,
+  variant,
+  grown,
+  animate,
+  reduced,
+  packetDelaySec,
+}: {
+  geom: BeamGeom;
+  hero?: boolean;
+  variant: Variant;
+  grown: boolean;
+  animate: boolean;
+  reduced: boolean;
+  packetDelaySec?: number;
+}): ReactNode {
+  const w = hero ? 10 : 6;
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: 'absolute',
+        left: geom.x - w / 2,
+        top: geom.y,
+        width: w,
+        height: reduced || grown ? geom.h : 0,
+        transformOrigin: 'top',
+        transform: `translateZ(${geom.z0}px) rotateX(90deg)`,
+        transition: 'height 550ms ease-out 1150ms',
+        overflow: 'hidden',
+        borderRadius: w / 2,
+        background: hero
+          ? 'linear-gradient(to bottom, color-mix(in oklch, var(--primary), transparent 35%), color-mix(in oklch, var(--primary), transparent 5%))'
+          : 'linear-gradient(to bottom, color-mix(in oklch, var(--primary), transparent 62%), color-mix(in oklch, var(--primary), transparent 30%))',
+        boxShadow: hero
+          ? '0 0 22px 2px color-mix(in oklch, var(--primary), transparent 25%)'
+          : '0 0 12px color-mix(in oklch, var(--primary), transparent 60%)',
+        pointerEvents: 'none',
+      }}>
+      {!reduced &&
+        (hero ? [0, 1, 2] : [0]).map((n) => (
+          <div
+            key={n}
+            style={
+              {
+                position: 'absolute',
+                left: 1,
+                top: hero ? -20 : -14,
+                width: w - 2,
+                height: hero ? 20 : 14,
+                borderRadius: (w - 2) / 2,
+                background: 'color-mix(in oklch, var(--primary), white 55%)',
+                boxShadow: hero
+                  ? '0 0 10px 2px color-mix(in oklch, var(--primary), transparent 25%)'
+                  : '0 0 8px 1px color-mix(in oklch, var(--primary), transparent 40%)',
+                '--rise': `${geom.h + (hero ? 40 : 28)}px`,
+                animation: `arch3d-rise-${variant} ${hero ? 2.1 : 2.6}s ease-in-out infinite`,
+                animationDelay: `${(packetDelaySec ?? 0) - n * 0.7}s`,
+                animationPlayState: animate ? 'running' : 'paused',
+              } as CSSProperties
+            }
+          />
+        ))}
     </div>
   );
 }
@@ -590,6 +699,7 @@ function Scene({
   const scale = useFitScale(wrapRef);
   const grown = settled; // beams grow after boxes rise (via transition delay)
   const selectGateway = (): void => onSelect('gateway');
+  const selectApiservers = (): void => onSelect('apiservers');
 
   /** Shared classes for the four real tier buttons (tilted top faces). */
   const tierBtn = (id: string): string =>
@@ -619,15 +729,83 @@ function Scene({
               transformStyle: 'preserve-3d',
               transform: TILT,
             }}>
-            {/* ---- base platform: the Go gateway ---- */}
+            {/* ---- tier 1: the cluster base (widest, thinnest slab) ---- */}
+            <Extruded
+              geom={BASE}
+              fill={FACE_PLATFORM}
+              edge={selectedId === 'apiservers' ? EDGE_ACCENT : EDGE_K8S}
+              glow={selectedId === 'apiservers' ? GLOW_STRONG : GLOW_FAINT}
+              frontShade={0.2}
+              rightShade={0.34}
+              entrance={entranceStyle(BASE, settled, 0)}
+              topClassName="bg-dotgrid">
+              <button
+                type="button"
+                aria-pressed={selectedId === 'apiservers'}
+                aria-label="Your clusters' apiservers"
+                onMouseEnter={selectApiservers}
+                onFocus={selectApiservers}
+                onClick={selectApiservers}
+                className={clsx(
+                  'absolute inset-0 rounded-[3px] bg-transparent text-left',
+                  tierBtn('apiservers'),
+                )}>
+                <span className="absolute bottom-2 left-4">
+                  <span className="block font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground">
+                    Your clusters&apos; apiservers
+                  </span>
+                  <span className="mt-0.5 block font-mono text-[9px] text-muted-foreground">
+                    multi-cluster · RBAC upstream
+                  </span>
+                </span>
+              </button>
+            </Extruded>
+
+            {/* Drop shadows under the floating levels (altitude legibility). */}
+            {SHADOWS.map((s) => (
+              <div
+                key={s.z}
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  left: s.x,
+                  top: s.y,
+                  width: s.w,
+                  height: s.h,
+                  transform: `translateZ(${s.z}px)`,
+                  background:
+                    'radial-gradient(ellipse closest-side, rgb(0 0 0 / 0.26), transparent 74%)',
+                  opacity: settled ? 1 : 0,
+                  transition: `opacity 700ms ease-out ${s.delay}ms`,
+                  pointerEvents: 'none',
+                }}
+              />
+            ))}
+
+            {/* ---- apiserver chips in a row on the base ---- */}
+            {CHIPS.map((chip, i) => (
+              <Extruded
+                key={CHIP_NAMES[i]}
+                geom={chip}
+                fill={FACE_CHIP}
+                edge={selectedId === 'apiservers' ? EDGE_ACCENT : EDGE_K8S}
+                frontShade={0.24}
+                rightShade={0.38}
+                entrance={entranceStyle(chip, settled, 90 + i * 90)}
+                interact={{onSelect: selectApiservers}}>
+                <FaceLabel title={CHIP_NAMES[i]} className="left-3 top-1/2 -translate-y-1/2" />
+              </Extruded>
+            ))}
+
+            {/* ---- tier 2: the Go gateway platform ---- */}
             <Extruded
               geom={PLATFORM}
               fill={FACE_PLATFORM}
               edge={selectedId === 'gateway' ? EDGE_ACCENT : EDGE}
-              glow={selectedId === 'gateway'}
+              glow={GLOW_STRONG}
               frontShade={0.2}
               rightShade={0.34}
-              entrance={entranceStyle(PLATFORM, settled, 0)}
+              entrance={entranceStyle(PLATFORM, settled, 360)}
               topClassName="bg-dotgrid">
               <button
                 type="button"
@@ -639,26 +817,39 @@ function Scene({
                   'absolute inset-0 rounded-[3px] bg-transparent text-left',
                   tierBtn('gateway'),
                 )}>
-                <span className="absolute bottom-3 left-4">
+                <span className="absolute bottom-3 left-6">
                   <span className="block font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground">
                     Go gateway
                   </span>
-                  <span className="mt-0.5 block font-mono text-[9px] text-muted-foreground">
-                    one static binary · your credentials only
+                  <span className="mt-0.5 block font-mono text-[9px] leading-snug text-muted-foreground">
+                    one static binary
+                    <br />
+                    your credentials only
                   </span>
                 </span>
               </button>
             </Extruded>
 
-            {/* ---- gateway internals ---- */}
+            {/* ---- gateway internals (front band + right flank) ---- */}
+            <Extruded
+              geom={AUTH}
+              fill={FACE_BOX}
+              edge={selectedId === 'gateway' ? EDGE_ACCENT : EDGE}
+              frontShade={0.22}
+              rightShade={0.36}
+              entrance={entranceStyle(AUTH, settled, 450)}
+              interact={{onSelect: selectGateway}}>
+              <FaceLabel title="Auth proxy" sub="your credentials" className="left-3 top-3" />
+            </Extruded>
+
             <Extruded
               geom={CACHE}
               fill={FACE_BOX}
               edge={selectedId === 'cache' ? EDGE_ACCENT : EDGE}
-              glow={selectedId === 'cache'}
+              glow={selectedId === 'cache' ? GLOW_STRONG : undefined}
               frontShade={0.22}
               rightShade={0.36}
-              entrance={entranceStyle(CACHE, settled, 260)}>
+              entrance={entranceStyle(CACHE, settled, 540)}>
               <button
                 type="button"
                 aria-pressed={selectedId === 'cache'}
@@ -684,7 +875,7 @@ function Scene({
               edge={selectedId === 'gateway' ? EDGE_ACCENT : EDGE}
               frontShade={0.22}
               rightShade={0.36}
-              entrance={entranceStyle(MUX, settled, 340)}
+              entrance={entranceStyle(MUX, settled, 630)}
               interact={{onSelect: selectGateway}}>
               <FaceLabel title="Multiplexer" sub="one /ws" className="right-3 top-2.5 text-right" />
               {/* The glowing pad where the hero beam leaves the face. */}
@@ -692,8 +883,8 @@ function Scene({
                 aria-hidden
                 className="pointer-events-none absolute rounded-full"
                 style={{
-                  left: BEAM.x - MUX.x - 13,
-                  top: BEAM.y - MUX.y - 13,
+                  left: HERO.x - MUX.x - 13,
+                  top: HERO.y - MUX.y - 13,
                   width: 26,
                   height: 26,
                   background:
@@ -703,7 +894,7 @@ function Scene({
               {/* The one live-green signal: the watch stream is connected. */}
               <span
                 aria-hidden
-                className="absolute bottom-2.5 left-3 flex items-center gap-1.5"
+                className="absolute right-3 top-10 flex items-center gap-1.5"
                 style={{pointerEvents: 'none'}}>
                 <span
                   className="size-1.5 rounded-full bg-live"
@@ -723,23 +914,12 @@ function Scene({
             </Extruded>
 
             <Extruded
-              geom={AUTH}
-              fill={FACE_BOX}
-              edge={selectedId === 'gateway' ? EDGE_ACCENT : EDGE}
-              frontShade={0.22}
-              rightShade={0.36}
-              entrance={entranceStyle(AUTH, settled, 420)}
-              interact={{onSelect: selectGateway}}>
-              <FaceLabel title="Auth proxy" sub="your credentials" className="left-3 top-3" />
-            </Extruded>
-
-            <Extruded
               geom={SWR}
               fill={FACE_BOX}
               edge={selectedId === 'gateway' ? EDGE_ACCENT : EDGE}
               frontShade={0.22}
               rightShade={0.36}
-              entrance={entranceStyle(SWR, settled, 500)}
+              entrance={entranceStyle(SWR, settled, 720)}
               interact={{onSelect: selectGateway}}>
               <FaceLabel
                 title="SWR memoizers"
@@ -748,113 +928,47 @@ function Scene({
               />
             </Extruded>
 
-            {/* ---- apiserver chips (ground level, far-left flank) ---- */}
-            {CHIPS.map((chip, i) => (
-              <Extruded
-                key={CHIP_NAMES[i]}
-                geom={chip}
-                fill={FACE_CHIP}
-                edge={selectedId === 'apiservers' ? EDGE_ACCENT : EDGE}
-                glow={selectedId === 'apiservers'}
-                frontShade={0.24}
-                rightShade={0.38}
-                entrance={entranceStyle(chip, settled, 320 + i * 80)}
-                interact={{onSelect: () => onSelect('apiservers')}}>
-                <FaceLabel title={CHIP_NAMES[i]} className="left-3 top-1/2 -translate-y-1/2" />
-              </Extruded>
-            ))}
-            {/* Invisible flat hit area: the one focusable apiservers button. */}
-            <button
-              type="button"
-              aria-pressed={selectedId === 'apiservers'}
-              aria-label="Your clusters' apiservers"
-              onMouseEnter={() => onSelect('apiservers')}
-              onFocus={() => onSelect('apiservers')}
-              onClick={() => onSelect('apiservers')}
-              className={clsx('absolute rounded-md border-0 bg-transparent', tierBtn('apiservers'))}
-              style={{
-                left: CHIPS[0].x - 8,
-                top: CHIPS[0].y - 8,
-                width: CHIP_W + 16,
-                height: CHIPS[2].y + CHIP_H - CHIPS[0].y + 16,
-                transform: 'translateZ(31px)',
-              }}
-            />
-
-            {/* ---- watch traces: apiservers fan into the informer cache ---- */}
-            {WATCH_TRACES.map((t, i) => (
-              <Trace
-                key={t.angle}
-                geom={t}
+            {/* ---- watch beams: each chip rises into the gateway underside,
+                     the middle one directly beneath the informer cache ---- */}
+            {WATCH_BEAMS.map((b, i) => (
+              <VBeam
+                key={b.x}
+                geom={b}
                 variant={variant}
-                settled={settled}
+                grown={grown}
                 animate={animate}
                 reduced={reduced}
-                delaySec={i * 0.8}
+                packetDelaySec={i * 0.85}
               />
             ))}
             {/* ---- snapshots + deltas: cache -> multiplexer ---- */}
             <Trace
-              geom={SHORT_TRACE}
+              geom={SNAP_TRACE}
               variant={variant}
               settled={settled}
               animate={animate}
               reduced={reduced}
               delaySec={0.4}
             />
+            {/* ---- the hero WebSocket beam: multiplexer -> browser slab ---- */}
+            <VBeam
+              geom={HERO}
+              hero
+              variant={variant}
+              grown={grown}
+              animate={animate}
+              reduced={reduced}
+            />
 
-            {/* ---- the hero beam: multiplexer -> browser slab ---- */}
-            <div
-              aria-hidden
-              style={{
-                position: 'absolute',
-                left: BEAM.x - 5,
-                top: BEAM.y,
-                width: 10,
-                height: reduced || grown ? BEAM.h : 0,
-                transformOrigin: 'top',
-                transform: `translateZ(${BEAM.z0}px) rotateX(90deg)`,
-                transition: 'height 550ms ease-out 950ms',
-                overflow: 'hidden',
-                borderRadius: 5,
-                background:
-                  'linear-gradient(to bottom, color-mix(in oklch, var(--primary), transparent 35%), color-mix(in oklch, var(--primary), transparent 5%))',
-                boxShadow: '0 0 22px 2px color-mix(in oklch, var(--primary), transparent 25%)',
-                pointerEvents: 'none',
-              }}>
-              {!reduced &&
-                [0, 1, 2].map((n) => (
-                  <div
-                    key={n}
-                    style={
-                      {
-                        position: 'absolute',
-                        left: 1,
-                        top: -20,
-                        width: 8,
-                        height: 20,
-                        borderRadius: 4,
-                        background: 'color-mix(in oklch, var(--primary), white 55%)',
-                        boxShadow:
-                          '0 0 10px 2px color-mix(in oklch, var(--primary), transparent 25%)',
-                        '--rise': `${BEAM.h + 40}px`,
-                        animation: `arch3d-rise-${variant} 2.1s ease-in-out infinite`,
-                        animationDelay: `${-n * 0.7}s`,
-                        animationPlayState: animate ? 'running' : 'paused',
-                      } as CSSProperties
-                    }
-                  />
-                ))}
-            </div>
-            {/* ---- the browser SPA slab ---- */}
+            {/* ---- tier 4: the browser SPA slab ---- */}
             <Extruded
               geom={SLAB}
               fill={FACE_PLATFORM}
               edge={selectedId === 'browser' ? EDGE_ACCENT : EDGE}
-              glow={selectedId === 'browser'}
+              glow={selectedId === 'browser' ? GLOW_STRONG : GLOW_SOFT}
               frontShade={0.18}
               rightShade={0.3}
-              entrance={entranceStyle(SLAB, settled, 680)}
+              entrance={entranceStyle(SLAB, settled, 810)}
               topClassName="bg-dotgrid">
               <button
                 type="button"
@@ -884,7 +998,7 @@ function Scene({
               edge={selectedId === 'browser' ? EDGE_ACCENT : EDGE}
               frontShade={0.2}
               rightShade={0.34}
-              entrance={entranceStyle(STORE, settled, 840)}
+              entrance={entranceStyle(STORE, settled, 900)}
               interact={{onSelect: () => onSelect('browser')}}>
               <FaceLabel title="Normalized store" className="left-2.5 top-2.5" />
             </Extruded>
@@ -894,7 +1008,7 @@ function Scene({
               edge={selectedId === 'browser' ? EDGE_ACCENT : EDGE}
               frontShade={0.2}
               rightShade={0.34}
-              entrance={entranceStyle(VTABLE, settled, 920)}
+              entrance={entranceStyle(VTABLE, settled, 990)}
               interact={{onSelect: () => onSelect('browser')}}>
               <FaceLabel title="Virtualized table" className="left-2.5 top-2.5" />
             </Extruded>
@@ -904,7 +1018,7 @@ function Scene({
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
-            style={{opacity: settled ? 1 : 0, transition: 'opacity 500ms ease-out 1100ms'}}>
+            style={{opacity: settled ? 1 : 0, transition: 'opacity 500ms ease-out 1350ms'}}>
             {CAPTIONS.map((c) => (
               <div
                 key={c.lines[0]}
@@ -922,15 +1036,6 @@ function Scene({
                 ))}
               </div>
             ))}
-            <div
-              className="absolute -translate-y-full font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
-              style={{
-                left: CHIP_HEADING.x - 30,
-                top: CHIP_HEADING.y - 8,
-                textShadow: '0 0 8px var(--background)',
-              }}>
-              your clusters&apos; apiservers
-            </div>
           </div>
         </div>
       </div>
