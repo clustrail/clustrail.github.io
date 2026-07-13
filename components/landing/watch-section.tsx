@@ -18,14 +18,9 @@ const SPECS: Array<{label: string; budget: string; measured: string}> = [
 
 export function WatchSection(): ReactNode {
   return (
-    <RevealSection className="border-t border-border/60 py-20 sm:py-28">
+    <RevealSection className="border-b border-border py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-6">
-        <SectionHeader
-          index="03"
-          kicker="Deltas_only"
-          title="Subscribe once, apply deltas"
-          align="left"
-        />
+        <SectionHeader kicker="Live data" title="Subscribe once, apply deltas" align="left" />
 
         <div className="mt-12 grid items-center gap-10 lg:grid-cols-2">
           <div className="reveal flex flex-col gap-5">
@@ -54,12 +49,8 @@ export function WatchSection(): ReactNode {
                   aria-hidden
                   className="min-w-4 flex-1 self-center border-b border-dotted border-muted-foreground/40"
                 />
-                <span className="shrink-0 font-mono text-2xs uppercase tracking-[0.12em] text-muted-foreground">
-                  {s.budget}
-                </span>
-                <span className="shrink-0 font-mono text-2xs font-semibold uppercase tracking-[0.12em] text-link">
-                  {s.measured}
-                </span>
+                <span className="shrink-0 text-xs text-muted-foreground">{s.budget}</span>
+                <span className="shrink-0 text-xs font-medium text-primary">{s.measured}</span>
               </li>
             ))}
           </ul>

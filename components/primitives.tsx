@@ -40,10 +40,10 @@ export function CtaButton({
   );
 }
 
-/** Small pill badge in mono - e.g. the version tag in the hero. */
+/** Small pill badge - e.g. the version tag in the hero. */
 export function Pill({children}: {children: ReactNode}): ReactNode {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-input bg-card/60 px-3.5 py-1.5 font-mono text-xs text-muted-foreground backdrop-blur">
+    <span className="inline-flex items-center gap-2 rounded-full border border-input bg-card/60 px-3.5 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur">
       {children}
     </span>
   );
@@ -92,18 +92,16 @@ export function Wordmark({
 }
 
 /**
- * Section heading block: numbered mono index + kicker + title + optional
- * lede. The `index` ("01", "02"...) is the ctrlb-style section marker - the
- * landing sections read as chapters of a spec sheet.
+ * Section heading block: a quiet sentence-case eyebrow + title + optional
+ * lede. Apple-style hierarchy: the eyebrow is the only colored element and
+ * carries no letterspacing, brackets, or index numbers.
  */
 export function SectionHeader({
-  index,
   kicker,
   title,
   lede,
   align = 'center',
 }: {
-  index?: string;
   kicker: string;
   title: ReactNode;
   lede?: ReactNode;
@@ -115,15 +113,8 @@ export function SectionHeader({
         'flex flex-col',
         align === 'center' ? 'items-center text-center' : 'items-start',
       )}>
-      <span className="flex items-baseline gap-3 font-mono text-xs font-medium uppercase tracking-[0.2em]">
-        {index && (
-          <span className="text-muted-foreground/60" aria-hidden>
-            {index}
-          </span>
-        )}
-        <span className="text-link">{kicker}</span>
-      </span>
-      <h2 className="mt-4 max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+      <span className="text-sm font-semibold text-primary">{kicker}</span>
+      <h2 className="mt-4 max-w-2xl text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
         {title}
       </h2>
       {lede && (
@@ -134,38 +125,8 @@ export function SectionHeader({
 }
 
 /**
- * Mono status label in the data plane's own vocabulary - `WATCH_CONNECTED`,
- * `DELTAS_ONLY`, `RBAC_UPSTREAM`. `live` adds the pulsing green dot.
- */
-export function StatusLabel({
-  children,
-  live = false,
-  className,
-}: {
-  children: ReactNode;
-  live?: boolean;
-  className?: string;
-}): ReactNode {
-  return (
-    <span
-      className={clsx(
-        'inline-flex items-center gap-2 font-mono text-2xs font-medium uppercase tracking-[0.18em] text-muted-foreground',
-        className,
-      )}>
-      {live && (
-        <span className="relative flex size-1.5" aria-hidden>
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-60" />
-          <span className="relative inline-flex size-1.5 rounded-full bg-live" />
-        </span>
-      )}
-      {children}
-    </span>
-  );
-}
-
-/**
- * Flat frame around a product screenshot: hairline border, a slim mono
- * address strip, and status pips echoing the app's connection indicator.
+ * Flat frame around a product screenshot: hairline border, a slim address
+ * strip, and status pips echoing the app's connection indicator.
  * `src` is a /public path.
  */
 export function BrowserFrame({
@@ -201,7 +162,7 @@ export function BrowserFrame({
           <span className="size-2 rounded-full bg-muted-foreground/30" />
           <span className="size-2 rounded-full bg-live/80" />
         </span>
-        <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">{url}</span>
+        <span className="min-w-0 truncate text-xs text-muted-foreground">{url}</span>
       </div>
       <img
         src={src}

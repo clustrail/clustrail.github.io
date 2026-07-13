@@ -1,6 +1,6 @@
 import type {CSSProperties, ReactNode} from 'react';
 import Link from 'next/link';
-import {BrowserFrame, CtaButton, GradientText, Pill, StatusLabel} from '@/components/primitives';
+import {BrowserFrame, CtaButton, GradientText, Pill} from '@/components/primitives';
 import {RevealSection} from '@/components/landing/reveal-section';
 import {TypedInstall} from '@/components/landing/typed-install';
 
@@ -12,7 +12,9 @@ import {TypedInstall} from '@/components/landing/typed-install';
  */
 export default function Hero({latest}: {latest: string}): ReactNode {
   return (
-    <RevealSection className="relative overflow-hidden pt-20 pb-16 sm:pt-28 sm:pb-20" threshold={0}>
+    <RevealSection
+      className="relative overflow-hidden border-b border-border pt-20 pb-16 sm:pt-28 sm:pb-20"
+      threshold={0}>
       {/* Dotted-grid backdrop faded toward the edges, under an ambient brand glow. */}
       <div
         aria-hidden
@@ -83,14 +85,10 @@ export default function Hero({latest}: {latest: string}): ReactNode {
           />
         </div>
 
-        {/* Quantified strip: real measured numbers, mono, hairline-dot separated. */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <StatusLabel>175 KB initial JS</StatusLabel>
-          <span aria-hidden className="size-1 rounded-full bg-muted-foreground/40" />
-          <StatusLabel>49 MB idle RSS</StatusLabel>
-          <span aria-hidden className="size-1 rounded-full bg-muted-foreground/40" />
-          <StatusLabel>one 63 MB binary</StatusLabel>
-        </div>
+        {/* Quantified strip: real measured numbers, one quiet line. */}
+        <p className="mt-10 text-sm text-muted-foreground">
+          175 KB initial JS · 49 MB idle · one 63 MB binary
+        </p>
       </div>
     </RevealSection>
   );

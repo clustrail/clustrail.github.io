@@ -18,8 +18,8 @@ import {
 /**
  * The docs navigation rail. A sticky column on desktop; a slide-in Sheet on
  * mobile. Active state follows the current pathname (usePathname island). The
- * active item is marked by a 2px primary left rail; group headers speak in the
- * mono label voice.
+ * active item is marked by a 2px primary left rail; group headers are quiet
+ * sentence-case labels.
  */
 
 function ItemLink({
@@ -61,7 +61,7 @@ function NavTree({
       {tree.map((entry) =>
         'items' in entry ? (
           <div key={entry.href} className="mt-5 first:mt-0">
-            <span className="mb-1.5 block pl-3 font-mono text-2xs font-semibold uppercase tracking-[0.18em] text-foreground/70">
+            <span className="mb-1.5 block pl-3 text-xs font-semibold text-muted-foreground">
               {entry.label}
             </span>
             <div className="flex flex-col gap-0.5">

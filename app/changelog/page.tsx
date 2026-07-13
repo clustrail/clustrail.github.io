@@ -61,20 +61,18 @@ function ReleaseEntry({
           {tag}
         </span>
         {latest && (
-          <span className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 font-mono text-2xs font-medium uppercase tracking-[0.08em] text-link">
+          <span className="rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-link">
             Latest
           </span>
         )}
         {prerelease && (
-          <span className="rounded-full border border-border px-2.5 py-0.5 font-mono text-2xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
             Pre-release
           </span>
         )}
       </div>
 
-      <time className="mt-2 block font-mono text-2xs uppercase tracking-[0.12em] text-muted-foreground">
-        {formatDate(date)}
-      </time>
+      <time className="mt-2 block text-xs text-muted-foreground">{formatDate(date)}</time>
 
       {notes?.length ? (
         <ul className="mt-5 ml-4 flex list-disc flex-col gap-2.5 marker:text-muted-foreground/50">
@@ -105,9 +103,7 @@ export default async function Changelog(): Promise<ReactNode> {
   return (
     <main className="mx-auto max-w-3xl px-6 py-20 sm:py-24">
       <header>
-        <span className="font-mono text-xs font-medium uppercase tracking-[0.2em] text-link">
-          Releases
-        </span>
+        <span className="text-sm font-semibold text-primary">Releases</span>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           Changelog
         </h1>

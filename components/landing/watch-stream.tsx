@@ -12,7 +12,6 @@
  */
 import {useEffect, useRef, useState, type ReactNode} from 'react';
 import clsx from 'clsx';
-import {StatusLabel} from '@/components/primitives';
 import {useInView} from '@/lib/use-in-view';
 
 type Verb = 'ADDED' | 'MODIFIED' | 'DELETED';
@@ -95,9 +94,15 @@ export default function WatchStream({className}: {className?: string}): ReactNod
       )}>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
         <span className="font-mono text-xs text-white/50">ws://localhost:8080/ws</span>
-        <StatusLabel live className="text-white/70">
+        {/* The terminal keeps its own mono status vocabulary - it is the one
+            place the data plane speaks for itself. */}
+        <span className="inline-flex items-center gap-2 font-mono text-2xs font-medium uppercase tracking-[0.18em] text-white/70">
+          <span className="relative flex size-1.5" aria-hidden>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-60" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-live" />
+          </span>
           WATCH_CONNECTED
-        </StatusLabel>
+        </span>
       </div>
       <ul className="m-0 flex min-h-[15rem] list-none flex-col justify-end gap-1.5 p-4 font-mono text-xs leading-relaxed">
         {rows.map((d, i) => (

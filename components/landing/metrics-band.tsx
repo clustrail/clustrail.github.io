@@ -1,5 +1,5 @@
 import type {CSSProperties, ReactNode} from 'react';
-import {SectionHeader, StatusLabel} from '@/components/primitives';
+import {SectionHeader} from '@/components/primitives';
 import {StatTile} from '@/components/stat-tile';
 import {RevealSection} from '@/components/landing/reveal-section';
 
@@ -28,10 +28,9 @@ const TILES: Tile[] = [
 
 export function MetricsBand(): ReactNode {
   return (
-    <RevealSection className="border-t border-border/60 py-20 sm:py-28">
+    <RevealSection className="border-b border-border py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeader
-          index="02"
           kicker="Performance"
           title="Numbers, not adjectives"
           lede="Every figure below is measured, not marketed. Runtime budgets are hard acceptance criteria; bundle and binary size are tracked, not capped."
@@ -55,9 +54,7 @@ export function MetricsBand(): ReactNode {
           ))}
         </div>
 
-        <div className="mt-12">
-          <StatusLabel>MEASURED_LOCAL_CLUSTER</StatusLabel>
-        </div>
+        <p className="mt-12 text-sm text-muted-foreground">Measured on a local kind cluster.</p>
       </div>
     </RevealSection>
   );

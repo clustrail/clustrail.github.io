@@ -42,8 +42,8 @@
  * (positioned half-way along the occlusion shift so they peek out behind the
  * standing boxes), keeping the altitudes legible in the light theme.
  *
- * Labels live ON the top faces (mono uppercase, tilted with the canvas);
- * flow captions are flat 2D overlays pinned at precomputed projected
+ * Labels live ON the top faces (quiet sentence-case Inter, tilted with the
+ * canvas); flow captions are flat 2D overlays pinned at precomputed projected
  * coordinates so they stay crisp and never fight 3D occlusion.
  *
  * Interaction: four focusable tier buttons (cluster base, gateway platform,
@@ -254,21 +254,21 @@ interface Caption {
 }
 const CAPTIONS: Caption[] = [
   {
-    lines: ['watch'],
+    lines: ['Watch'],
     at: proj(WATCH_BEAMS[0].x, WATCH_BEAMS[0].y, 90), // left watch beam, upper half
     dx: -12,
     dy: -14,
     align: 'right',
   },
   {
-    lines: ['snapshots + deltas'],
+    lines: ['Snapshots + deltas'],
     at: proj(387, 316, SNAP_TRACE.z), // the cache -> multiplexer bridge, midpoint
     dx: 18,
     dy: 22,
     align: 'right',
   },
   {
-    lines: ['one WebSocket', 'deltas only'],
+    lines: ['One WebSocket', 'deltas only'],
     // The only collision-free air near the hero beam: right of the slab's
     // corner, above the SWR box (checked against every projected face).
     at: proj(HERO_AT.x, HERO_AT.y, 335),
@@ -461,7 +461,7 @@ function entranceStyle(geom: BoxGeom, settled: boolean, delay: number): CSSPrope
   };
 }
 
-/** A mono uppercase label sitting flat on a top face (tilts with the canvas). */
+/** A quiet sentence-case label sitting flat on a top face (tilts with the canvas). */
 function FaceLabel({
   title,
   sub,
@@ -473,13 +473,9 @@ function FaceLabel({
 }): ReactNode {
   return (
     <div className={clsx('pointer-events-none absolute', className)}>
-      <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground">
-        {title}
-      </div>
+      <div className="text-[10px] font-medium text-foreground">{title}</div>
       {sub && (
-        <div className="mt-0.5 font-mono text-[8.5px] leading-tight text-muted-foreground">
-          {sub}
-        </div>
+        <div className="mt-0.5 text-[8.5px] leading-tight text-muted-foreground">{sub}</div>
       )}
     </div>
   );
@@ -644,14 +640,14 @@ function TierButton({
         className,
       )}>
       <span className="flex items-baseline gap-2 overflow-hidden">
-        <span className="whitespace-nowrap font-mono text-[13px] font-medium text-foreground">
+        <span className="whitespace-nowrap text-[13px] font-medium text-foreground">
           {tier.name}
         </span>
         {tier.tag && (
-          <span className="truncate font-mono text-2xs text-muted-foreground">{tier.tag}</span>
+          <span className="truncate text-2xs text-muted-foreground">{tier.tag}</span>
         )}
       </span>
-      <span className="mt-0.5 block truncate font-mono text-2xs text-muted-foreground">
+      <span className="mt-0.5 block truncate text-2xs text-muted-foreground">
         {tier.annotations.join(' · ')}
       </span>
     </button>
@@ -675,9 +671,7 @@ function Explainer({
         compact ? 'min-h-24 p-3 sm:p-4' : 'min-h-28 p-4 sm:min-h-24 sm:p-5',
         className,
       )}>
-      <span className="font-mono text-2xs font-medium uppercase tracking-[0.16em] text-link">
-        {tier.name}
-      </span>
+      <span className="text-xs font-semibold text-primary">{tier.name}</span>
       <p
         className={clsx(
           'mt-2 leading-relaxed text-muted-foreground',
@@ -762,10 +756,10 @@ function Scene({
                   tierBtn('apiservers'),
                 )}>
                 <span className="absolute bottom-3 left-4">
-                  <span className="block font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground">
+                  <span className="block text-[11px] font-medium text-foreground">
                     Your clusters&apos; apiservers
                   </span>
-                  <span className="mt-0.5 block font-mono text-[9px] text-muted-foreground">
+                  <span className="mt-0.5 block text-[9px] text-muted-foreground">
                     multi-cluster · RBAC upstream
                   </span>
                 </span>
@@ -829,10 +823,8 @@ function Scene({
                   tierBtn('gateway'),
                 )}>
                 <span className="absolute bottom-3 left-6">
-                  <span className="block font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground">
-                    Go gateway
-                  </span>
-                  <span className="mt-0.5 block font-mono text-[9px] leading-snug text-muted-foreground">
+                  <span className="block text-[11px] font-medium text-foreground">Go gateway</span>
+                  <span className="mt-0.5 block text-[9px] leading-snug text-muted-foreground">
                     one static binary
                     <br />
                     your credentials only
@@ -918,9 +910,7 @@ function Scene({
                         }
                   }
                 />
-                <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-live">
-                  watch_connected
-                </span>
+                <span className="text-[8px] font-medium text-live">watch connected</span>
               </span>
             </Extruded>
 
@@ -993,10 +983,8 @@ function Scene({
                 )}
                 aria-label="Browser SPA">
                 <span className="absolute bottom-2.5 left-3.5">
-                  <span className="block font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground">
-                    Browser SPA
-                  </span>
-                  <span className="mt-0.5 block font-mono text-[8.5px] text-muted-foreground">
+                  <span className="block text-[10px] font-medium text-foreground">Browser SPA</span>
+                  <span className="mt-0.5 block text-[8.5px] text-muted-foreground">
                     only visible rows in the DOM
                   </span>
                 </span>
@@ -1034,7 +1022,7 @@ function Scene({
               <div
                 key={c.lines[0]}
                 className={clsx(
-                  'absolute -translate-y-1/2 whitespace-nowrap font-mono text-2xs leading-snug text-muted-foreground',
+                  'absolute -translate-y-1/2 whitespace-nowrap text-2xs font-medium leading-snug text-muted-foreground',
                   c.align === 'right' && '-translate-x-full text-right',
                 )}
                 style={{
@@ -1114,7 +1102,7 @@ export function ArchitectureDiagram({variant}: {variant: 'landing' | 'full'}): R
 
       <p
         className={clsx(
-          'mx-auto w-full font-mono text-2xs leading-relaxed text-muted-foreground/80',
+          'mx-auto w-full text-xs leading-relaxed text-muted-foreground/80',
           maxW,
         )}>
         The one exception: metrics.k8s.io has no watch verb, so CPU/RAM is the single short-TTL

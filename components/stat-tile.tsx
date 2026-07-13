@@ -66,17 +66,13 @@ export function StatTile({
 
   return (
     <div ref={ref} className={clsx('flex flex-col gap-1.5', className)}>
-      <span className="font-mono text-4xl font-semibold tracking-tight text-foreground tabular-nums sm:text-5xl">
+      <span className="text-4xl font-semibold tracking-tight text-foreground tabular-nums sm:text-5xl">
         {prefix}
         {current.toFixed(decimals)}
         <span className="ml-1 text-xl text-muted-foreground sm:text-2xl">{suffix}</span>
       </span>
       <span className="text-sm text-foreground/90">{label}</span>
-      {sublabel && (
-        <span className="font-mono text-2xs uppercase tracking-[0.14em] text-muted-foreground">
-          {sublabel}
-        </span>
-      )}
+      {sublabel && <span className="text-xs text-muted-foreground">{sublabel}</span>}
     </div>
   );
 }

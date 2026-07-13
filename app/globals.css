@@ -13,8 +13,9 @@
  * An explicit choice wins via [data-theme="light"|"dark"], stamped before
  * first paint by the no-flash script in app/layout.tsx.
  *
- * Headlines are Inter like the app; kickers, labels, and commands speak in
- * JetBrains Mono, the terminal voice.
+ * Type is Inter throughout, with Apple-style hierarchy; JetBrains Mono is
+ * reserved for content that is genuinely code (commands, code blocks, kbd
+ * chips, the watch-stream terminal, changelog version chips).
  */
 @import "tailwindcss";
 @import "@fontsource-variable/inter";

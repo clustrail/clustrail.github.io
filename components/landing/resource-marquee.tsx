@@ -2,7 +2,7 @@ import type {CSSProperties, ReactNode} from 'react';
 
 /**
  * Decorative marquee of the resource types Clustrail speaks - every one served
- * by the single generic resource path. Mono names with tiny k8s-style colored
+ * by the single generic resource path. Quiet names with tiny k8s-style colored
  * dots, scrolling in a seamless loop (the track holds two copies) and masked at
  * both edges. aria-hidden: it is texture, not content.
  */
@@ -39,7 +39,7 @@ const RESOURCES = [
 
 function Item({name, index}: {name: string; index: number}): ReactNode {
   return (
-    <span className="flex shrink-0 items-center gap-2 px-5 font-mono text-sm text-muted-foreground">
+    <span className="flex shrink-0 items-center gap-2 px-5 text-sm text-muted-foreground">
       <span
         aria-hidden
         className="size-1.5 rounded-full"
@@ -52,7 +52,7 @@ function Item({name, index}: {name: string; index: number}): ReactNode {
 
 export function ResourceMarquee(): ReactNode {
   return (
-    <div aria-hidden className="mask-fade-x marquee overflow-hidden border-y border-border/60 py-4">
+    <div aria-hidden className="mask-fade-x marquee overflow-hidden border-b border-border py-4">
       <div className="marquee-track flex w-max">
         {/* Two identical copies so the -50% loop is seamless. */}
         {[0, 1].map((copy) => (

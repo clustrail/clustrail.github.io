@@ -35,9 +35,7 @@ export default function Toc({headings}: {headings: Doc['headings']}): ReactNode 
 
   return (
     <nav aria-label="On this page" className="flex flex-col">
-      <span className="mb-3 font-mono text-2xs font-semibold uppercase tracking-[0.18em] text-foreground/70">
-        On this page
-      </span>
+      <span className="mb-3 text-xs font-semibold text-muted-foreground">On this page</span>
       <div className="flex flex-col border-l border-border">
         {headings.map((h) => (
           <a

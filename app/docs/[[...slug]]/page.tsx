@@ -38,7 +38,7 @@ export async function generateMetadata({params}: Props): Promise<Metadata> {
 }
 
 /**
- * The mono kicker over a page: the label of the nav group the doc belongs to
+ * The eyebrow over a page: the label of the nav group the doc belongs to
  * (e.g. "Installation", "Features"), or "Documentation" for a top-level page.
  */
 function navGroupLabel(slug: string[]): string {
@@ -104,9 +104,7 @@ export default async function DocPage({params}: Props): Promise<ReactNode> {
     <div className="grid min-w-0 gap-12 xl:grid-cols-[minmax(0,1fr)_13rem]">
       <article className="prose docs-prose min-w-0 max-w-none prose-headings:scroll-mt-24">
         <header className="not-prose mb-10">
-          <p className="font-mono text-xs font-medium uppercase tracking-[0.18em] text-link">
-            {kicker}
-          </p>
+          <p className="text-sm font-semibold text-primary">{kicker}</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
             {doc.title}
           </h1>
@@ -139,7 +137,7 @@ export default async function DocPage({params}: Props): Promise<ReactNode> {
               <Link
                 href={prev.href}
                 className="group flex flex-col gap-1 rounded-lg border border-border p-4 no-underline transition-colors hover:border-input">
-                <span className="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <ArrowLeft className="size-3" /> Previous
                 </span>
                 <span className="text-sm font-medium text-foreground">{prev.label}</span>
@@ -151,7 +149,7 @@ export default async function DocPage({params}: Props): Promise<ReactNode> {
               <Link
                 href={next.href}
                 className="group flex flex-col items-end gap-1 rounded-lg border border-border p-4 text-right no-underline transition-colors hover:border-input sm:col-start-2">
-                <span className="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.16em] text-muted-foreground">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   Next <ArrowRight className="size-3" />
                 </span>
                 <span className="text-sm font-medium text-foreground">{next.label}</span>

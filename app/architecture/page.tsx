@@ -14,39 +14,33 @@ export const metadata: Metadata = {
 };
 
 /* 02 - the pieces that make the data plane work, each a package in the binary. */
-const COMPONENTS: Array<{n: string; title: string; pkg: string; body: string}> = [
+const COMPONENTS: Array<{title: string; pkg: string; body: string}> = [
   {
-    n: '01',
     title: 'The WebSocket multiplexer',
     pkg: 'internal/multiplexer',
     body: 'The browser opens exactly one /ws. Every list and detail view multiplexes over it via a subscription key of the form clusterId|gvr|namespace|selectorHash. The backend ref-counts a single server-side subscription and fans each informer delta out to every socket that shares the key.',
   },
   {
-    n: '02',
     title: 'Dynamic shared informers',
     pkg: 'internal/watch',
     body: 'Dynamic shared informers over unstructured objects hold the authoritative watch cache in process, one set per cluster. A SetTransform strips managedFields before anything is cached, and idle informers stop on tiered timeouts, so memory tracks what is actually being watched.',
   },
   {
-    n: '03',
     title: 'The generic resource registry',
     pkg: 'internal/resources',
     body: 'Every resource is one declarative entry: a GVR plus a table-projection function. A single code path serves core types and CRDs alike, so adding a type is a registry line and its columns rather than new plumbing, and CRDs are discovered from the cluster.',
   },
   {
-    n: '04',
     title: 'The authenticating reverse proxy',
     pkg: 'internal/proxy',
     body: 'Reads and writes proxy through httputil.ReverseProxy over a per-identity transport built with rest.TransportFor. Your own token goes upstream on every request, so the gateway carries no ambient privilege of its own and cannot see more than you can.',
   },
   {
-    n: '05',
     title: 'Stale-while-revalidate memoizers',
     pkg: 'internal/rbac',
     body: 'Discovery, access reviews, metrics, and topology are costly to recompute and safe to reuse briefly. Each sits behind a stale-while-revalidate memoizer that serves the last value instantly and refreshes in the background, so a warm UI never blocks waiting on them.',
   },
   {
-    n: '06',
     title: 'The metrics joiner',
     pkg: 'internal/metrics',
     body: 'The single sanctioned poll. Because metrics.k8s.io is an aggregated, list-only API with no watch verb, node and pod usage is joined to allocatable and requests from the warm caches, memoized on a short TTL, and polled on a roughly 12-second cadence. Nothing else polls.',
@@ -55,17 +49,17 @@ const COMPONENTS: Array<{n: string; title: string; pkg: string; body: string}> =
 
 /* 03 - the two flows through the binary, told as ordered steps. */
 const READ_PATH: Array<{k: string; body: string}> = [
-  {k: 'subscribe', body: 'A view opens a subscription key on the one socket - clusterId, GVR, namespace, and a selector hash.'},
-  {k: 'informer syncs once', body: 'The server ref-counts a single shared informer for that key and lets it list, then watch, exactly once.'},
-  {k: 'snapshot', body: 'The current cache contents stream down as the initial set - the only bulk transfer in the whole session.'},
-  {k: 'deltas stream', body: 'Every later change arrives as a delta over the same socket. There is no re-list and no polling after the snapshot.'},
+  {k: 'Subscribe', body: 'A view opens a subscription key on the one socket - clusterId, GVR, namespace, and a selector hash.'},
+  {k: 'The informer syncs once', body: 'The server ref-counts a single shared informer for that key and lets it list, then watch, exactly once.'},
+  {k: 'Snapshot', body: 'The current cache contents stream down as the initial set - the only bulk transfer in the whole session.'},
+  {k: 'Deltas stream', body: 'Every later change arrives as a delta over the same socket. There is no re-list and no polling after the snapshot.'},
 ];
 
 const WRITE_PATH: Array<{k: string; body: string}> = [
-  {k: 'action', body: 'You trigger an edit, a scale, a cordon, or a delete from the UI.'},
-  {k: 'UI gated by a review', body: 'A SelfSubjectAccessReview decides whether the control is even enabled - the UI never offers what you cannot do.'},
-  {k: 'apiserver enforces RBAC', body: 'The write proxies upstream with your credentials, and Kubernetes itself allows or forbids it. Our code never adjudicates.'},
-  {k: 'the watch delta confirms', body: 'The resulting change returns through the same watch stream, so the list you are looking at updates itself.'},
+  {k: 'Action', body: 'You trigger an edit, a scale, a cordon, or a delete from the UI.'},
+  {k: 'The UI is gated by a review', body: 'A SelfSubjectAccessReview decides whether the control is even enabled - the UI never offers what you cannot do.'},
+  {k: 'The apiserver enforces RBAC', body: 'The write proxies upstream with your credentials, and Kubernetes itself allows or forbids it. Our code never adjudicates.'},
+  {k: 'The watch delta confirms', body: 'The resulting change returns through the same watch stream, so the list you are looking at updates itself.'},
 ];
 
 /* 04 - the eight load-bearing decisions, curated from the repo's ARCHITECTURE.md. */
@@ -129,9 +123,7 @@ function StepList({
 }): ReactNode {
   return (
     <Card className="p-6 sm:p-7">
-      <span className="font-mono text-2xs font-medium uppercase tracking-[0.2em] text-link">
-        {title}
-      </span>
+      <span className="text-sm font-semibold text-primary">{title}</span>
       <ol className="relative m-0 mt-5 flex list-none flex-col gap-5 border-l border-border pl-6">
         {steps.map((s, i) => (
           <li
@@ -144,9 +136,7 @@ function StepList({
               className="absolute -left-[1.6875rem] top-1 flex size-4 items-center justify-center rounded-full border border-border bg-card">
               <span className="size-1.5 rounded-full bg-primary" />
             </span>
-            <span className="font-mono text-xs font-medium text-foreground">
-              {String(i + 1).padStart(2, '0')} · {s.k}
-            </span>
+            <span className="text-sm font-medium text-foreground">{s.k}</span>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
           </li>
         ))}
@@ -162,8 +152,7 @@ export default function ArchitecturePage(): ReactNode {
       <section className="border-b border-border pb-16 pt-16 sm:pb-24 sm:pt-24">
         <div className="mx-auto max-w-6xl px-6">
           <SectionHeader
-            index="01"
-            kicker="[ARCHITECTURE]"
+            kicker="Architecture"
             title="A gateway, not a middleman."
             lede="Clustrail is one Go binary that serves an embedded React SPA and proxies to your clusters with your own credentials. The data plane watches, never polls: informers keep a warm cache next to each API server, and only deltas cross the wire."
             align="left"
@@ -178,21 +167,17 @@ export default function ArchitecturePage(): ReactNode {
       <section className="border-b border-border py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <SectionHeader
-            index="02"
-            kicker="[COMPONENTS]"
+            kicker="Components"
             title="Six pieces in one binary."
             lede="Each of these is a package that ships inside the single executable. None of them holds state you cannot rebuild from the cluster."
             align="left"
           />
           <div className="mt-12 flex flex-col gap-4">
             {COMPONENTS.map((c) => (
-              <Card key={c.n} className="p-6 sm:p-7">
+              <Card key={c.pkg} className="p-6 sm:p-7">
                 <div className="grid gap-4 sm:grid-cols-[minmax(0,14rem)_1fr] sm:gap-8">
                   <div className="flex flex-col gap-1.5">
-                    <span className="font-mono text-2xs text-muted-foreground/60">{c.n}</span>
-                    <span className="font-mono text-sm font-medium text-foreground">
-                      {c.title}
-                    </span>
+                    <span className="text-sm font-medium text-foreground">{c.title}</span>
                     <span className="font-mono text-2xs text-link">{c.pkg}</span>
                   </div>
                   <p className="text-sm leading-relaxed text-muted-foreground">{c.body}</p>
@@ -207,8 +192,7 @@ export default function ArchitecturePage(): ReactNode {
       <RevealSection className="border-b border-border py-16 sm:py-24" threshold={0.1}>
         <div className="mx-auto max-w-6xl px-6">
           <SectionHeader
-            index="03"
-            kicker="[LIFECYCLE]"
+            kicker="Lifecycle"
             title="Read and write, end to end."
             lede="Two flows tell the whole story: how data reaches your screen, and how a change you make comes back to confirm itself."
             align="left"
@@ -224,8 +208,7 @@ export default function ArchitecturePage(): ReactNode {
       <section className="border-b border-border py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <SectionHeader
-            index="04"
-            kicker="[DECISIONS]"
+            kicker="Decisions"
             title="Eight load-bearing decisions."
             lede="These span multiple packages and are easy to violate by accident. They are finalized: where the code drifts from them, the code is the bug."
             align="left"
@@ -240,11 +223,9 @@ export default function ArchitecturePage(): ReactNode {
                     : 'border-t border-border py-7 last:pb-0'
                 }>
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,3rem)_1fr] sm:gap-8">
-                  <span className="font-mono text-sm font-semibold text-link">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
+                  <span className="text-sm font-semibold text-primary tabular-nums">{i + 1}</span>
                   <div>
-                    <h3 className="font-mono text-base font-medium text-foreground">{d.title}</h3>
+                    <h3 className="text-base font-semibold text-foreground">{d.title}</h3>
                     <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
                       {d.why}
                     </p>
@@ -260,8 +241,7 @@ export default function ArchitecturePage(): ReactNode {
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-6">
           <SectionHeader
-            index="05"
-            kicker="[RECEIPTS]"
+            kicker="Performance"
             title="The budgets are real."
             lede="These are not marketing numbers. The JS, frame, delta, and memory figures are CI gates on every change, measured against a local kind cluster."
             align="left"
@@ -279,7 +259,7 @@ export default function ArchitecturePage(): ReactNode {
               />
             ))}
           </div>
-          <p className="mt-12 max-w-2xl font-mono text-2xs leading-relaxed text-muted-foreground">
+          <p className="mt-12 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Method: figures are taken against the local three-node kind cluster the project
             develops on. The binary size is a single-platform stripped build with the SPA embedded.
             A change that ships over a runtime budget is not done - it is raised as a tradeoff, not
@@ -293,7 +273,7 @@ export default function ArchitecturePage(): ReactNode {
               href="https://github.com/clustrail/clustrail/blob/main/ARCHITECTURE.md"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-link underline-offset-4 hover:underline">
+              className="text-link underline-offset-4 hover:underline">
               ARCHITECTURE.md
             </a>
             .

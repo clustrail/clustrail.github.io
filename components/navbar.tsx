@@ -33,14 +33,15 @@ export function GithubMark({size = 18}: {size?: number}): ReactNode {
 }
 
 /**
- * The site chrome, matching the app's top bar: canvas-colored sticky bar with
- * a hairline, quiet links, and the one blue CTA on the right. Below md the
- * links collapse into a Sheet-based mobile nav.
+ * The site chrome, matching the app's top bar: a sticky bar with a hairline,
+ * quiet links, and the one blue CTA on the right. It sits inside the layout's
+ * boxed frame, which bounds its width; below md the links collapse into a
+ * Sheet-based mobile nav.
  */
 export default function Navbar(): ReactNode {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-canvas/90 backdrop-blur-sm">
-      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-sm">
+      <nav className="flex h-16 w-full items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2.5">
           <img src="/favicon.svg" alt="" width={26} height={26} draggable={false} />
           <Wordmark className="text-lg" />

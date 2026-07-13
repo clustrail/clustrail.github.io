@@ -38,9 +38,7 @@ export default function MobileNav(): ReactNode {
         </SheetHeader>
 
         <nav className="flex flex-col px-6 py-6">
-          <span className="mb-4 font-mono text-2xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Menu
-          </span>
+          <span className="mb-4 text-xs font-semibold text-muted-foreground">Menu</span>
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -58,7 +56,7 @@ export default function MobileNav(): ReactNode {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Clustrail on GitHub"
-            className="inline-flex items-center gap-2 font-mono text-2xs font-medium uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground">
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             <GithubMark size={16} />
             GitHub
           </a>

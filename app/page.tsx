@@ -8,7 +8,6 @@ import FeatureShowcase from '@/components/landing/feature-showcase';
 import {TrustSection} from '@/components/landing/trust-section';
 import InstallSection from '@/components/landing/install-section';
 import {Faq} from '@/components/landing/faq';
-import FinalCta from '@/components/landing/final-cta';
 import {fetchReleases} from '@/lib/releases';
 import {latestTag} from '@/lib/version';
 
@@ -34,7 +33,6 @@ export default async function Home(): Promise<ReactNode> {
       <TrustSection />
       <InstallSection />
       <Faq />
-      <FinalCta />
     </main>
   );
 }

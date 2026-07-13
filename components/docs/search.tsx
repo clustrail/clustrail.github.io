@@ -163,7 +163,7 @@ export default function DocsSearch({className}: {className?: string}): ReactNode
                 placeholder="Search the docs"
                 autoComplete="off"
                 spellCheck={false}
-                className="w-full bg-transparent py-3.5 font-mono text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                className="w-full bg-transparent py-3.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
               />
               <kbd className="hidden items-center rounded border border-border px-1.5 font-mono text-2xs text-muted-foreground sm:inline-flex">
                 ESC
@@ -172,7 +172,7 @@ export default function DocsSearch({className}: {className?: string}): ReactNode
 
             <div className="max-h-80 overflow-y-auto p-2">
               {failed ? (
-                <p className="px-3 py-6 text-center font-mono text-2xs uppercase tracking-[0.18em] text-muted-foreground">
+                <p className="px-3 py-6 text-center text-sm text-muted-foreground">
                   Search index not built
                 </p>
               ) : results.length > 0 ? (

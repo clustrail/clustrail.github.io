@@ -51,10 +51,15 @@ export default function RootLayout({children}: {children: ReactNode}): ReactNode
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbfbfc" />
         <script dangerouslySetInnerHTML={{__html: THEME_BOOT}} />
       </head>
-      <body className="flex min-h-screen flex-col bg-canvas font-sans text-foreground antialiased">
-        <Navbar />
-        <div className="flex-1">{children}</div>
-        <Footer />
+      <body className="bg-canvas font-sans text-foreground antialiased">
+        {/* The boxed frame: one centered column with hairline rails; the
+            canvas shows outside the rails on wide screens. The navbar stays
+            sticky inside it. */}
+        <div className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-col border-x border-border bg-background">
+          <Navbar />
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </div>
       </body>
     </html>
   );

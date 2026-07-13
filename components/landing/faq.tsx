@@ -37,22 +37,17 @@ const FAQS: Array<{q: string; a: ReactNode}> = [
 
 export function Faq(): ReactNode {
   return (
-    <RevealSection className="border-t border-border/60 py-20 sm:py-28">
+    <RevealSection className="py-20 sm:py-28">
       <div className="mx-auto max-w-2xl px-6">
-        <SectionHeader index="07" align="left" kicker="Questions" title="Frequently asked" />
+        <SectionHeader align="left" kicker="Questions" title="Frequently asked" />
 
         <Accordion type="single" collapsible className="reveal mt-10">
-          {FAQS.map((f, i) => (
+          {FAQS.map((f) => (
             <AccordionItem key={f.q} value={f.q}>
               <AccordionTrigger className="gap-4 py-4">
-                <span className="flex min-w-0 items-baseline gap-3">
-                  <span className="shrink-0 font-mono text-2xs font-medium text-link">
-                    Q_{String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span className="text-[15px] font-medium text-foreground">{f.q}</span>
-                </span>
+                <span className="text-[15px] font-medium text-foreground">{f.q}</span>
               </AccordionTrigger>
-              <AccordionContent className="pl-[3.25rem] text-sm leading-relaxed text-muted-foreground">
+              <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
                 {f.a}
               </AccordionContent>
             </AccordionItem>
