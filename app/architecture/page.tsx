@@ -68,7 +68,7 @@ const WRITE_PATH: Array<{k: string; body: string}> = [
   {k: 'the watch delta confirms', body: 'The resulting change returns through the same watch stream, so the list you are looking at updates itself.'},
 ];
 
-/* 04 - the eight load-bearing decisions, curated from docs/ARCHITECTURE.md. */
+/* 04 - the eight load-bearing decisions, curated from the repo's ARCHITECTURE.md. */
 const DECISIONS: Array<{title: string; why: string}> = [
   {
     title: 'One WebSocket, many logical subscriptions',
@@ -113,7 +113,7 @@ const RECEIPTS: Array<{
   label: string;
   sublabel: string;
 }> = [
-  {value: 175, suffix: 'KB', label: 'Initial JS, gzipped', sublabel: 'measured · budget 350 KB'},
+  {value: 175, suffix: 'KB', label: 'Initial JS, gzipped', sublabel: 'measured · tracked, not capped'},
   {value: 8, prefix: '<', suffix: 'ms', label: 'Watch delta applied', sublabel: 'budget · 10,000-row table'},
   {value: 1.5, decimals: 1, suffix: 'ms', label: 'Subscribe to snapshot', sublabel: 'measured · warm informer cache'},
   {value: 49, suffix: 'MB', label: 'Backend idle RSS', sublabel: 'one cluster · budget 80 MB'},
@@ -282,8 +282,21 @@ export default function ArchitecturePage(): ReactNode {
           <p className="mt-12 max-w-2xl font-mono text-2xs leading-relaxed text-muted-foreground">
             Method: figures are taken against the local three-node kind cluster the project
             develops on. The binary size is a single-platform stripped build with the SPA embedded.
-            A change that ships over a gated budget is not done - it is raised as a tradeoff, not
+            A change that ships over a runtime budget is not done - it is raised as a tradeoff, not
             merged.
+          </p>
+
+          <p className="mt-6 text-sm text-muted-foreground">
+            This page is the short version. The full document, written against the code, lives in
+            the repo:{' '}
+            <a
+              href="https://github.com/clustrail/clustrail/blob/main/ARCHITECTURE.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-link underline-offset-4 hover:underline">
+              ARCHITECTURE.md
+            </a>
+            .
           </p>
 
           <div className="mt-14 flex flex-col gap-3 sm:flex-row sm:items-center">

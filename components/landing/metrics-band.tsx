@@ -19,7 +19,7 @@ type Tile = {
 };
 
 const TILES: Tile[] = [
-  {value: 175, suffix: 'KB', label: 'initial JS, gzipped', sublabel: 'budget 350 KB'},
+  {value: 175, suffix: 'KB', label: 'initial JS, gzipped', sublabel: 'tracked, not capped'},
   {value: 8, prefix: '<', suffix: 'ms', label: 'watch delta to screen', sublabel: '10,000-row table'},
   {value: 1.5, decimals: 1, suffix: 'ms', label: 'subscribe to snapshot', sublabel: 'warm informer cache'},
   {value: 49, suffix: 'MB', label: 'backend idle RSS', sublabel: 'budget 80 MB'},
@@ -34,7 +34,7 @@ export function MetricsBand(): ReactNode {
           index="02"
           kicker="Performance"
           title="Numbers, not adjectives"
-          lede="Every figure below is measured, not marketed - each against the CI budget it has to beat."
+          lede="Every figure below is measured, not marketed. Runtime budgets are hard acceptance criteria; bundle and binary size are tracked, not capped."
         />
 
         <div className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
