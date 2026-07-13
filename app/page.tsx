@@ -1,7 +1,6 @@
 import type {ReactNode} from 'react';
 import type {Metadata} from 'next';
 import Hero from '@/components/landing/hero';
-import {ResourceMarquee} from '@/components/landing/resource-marquee';
 import {MetricsBand} from '@/components/landing/metrics-band';
 import {WatchSection} from '@/components/landing/watch-section';
 import FeatureShowcase from '@/components/landing/feature-showcase';
@@ -26,10 +25,9 @@ export default async function Home(): Promise<ReactNode> {
   return (
     <main>
       <Hero latest={latest} />
-      <ResourceMarquee />
+      <FeatureShowcase />
       <MetricsBand />
       <WatchSection />
-      <FeatureShowcase />
       <TrustSection />
       <InstallSection />
       <Faq />
