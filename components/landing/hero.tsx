@@ -77,7 +77,7 @@ export default function Hero({latest}: {latest: string}): ReactNode {
             className="pointer-events-none absolute -inset-x-16 -top-10 bottom-0 bg-[radial-gradient(ellipse_55%_60%_at_50%_45%,rgba(50,108,229,0.22),transparent)] blur-3xl"
           />
           <BrowserFrame
-            src="/shots/overview.png"
+            stem="/shots/overview"
             alt="The Clustrail cluster overview"
             url="localhost:8080/clusters/kind-clustrail/overview"
             priority

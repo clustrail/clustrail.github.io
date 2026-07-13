@@ -125,34 +125,71 @@ export function SectionHeader({
 }
 
 /**
+ * A theme-paired product screenshot. Shots under /shots are committed as
+ * <stem>-dark.png and <stem>-light.png masters at 3200x2000, each with
+ * downscaled -1600w/-2400w siblings (see scripts/downscale-shots.mjs). Both
+ * themes render as siblings and the .shot-dark/.shot-light rules in
+ * globals.css keep exactly one visible, so the image follows the site theme
+ * with no JS. The hidden sibling is lazy and display:none, so it is never
+ * fetched; only the dark shot honors `priority` (dark is the default theme,
+ * and a light-theme visitor's shot still loads on first layout).
+ */
+export function ThemedShot({
+  stem,
+  alt,
+  sizes,
+  priority = false,
+  className,
+}: {
+  /** Path stem under /public, e.g. "/shots/overview". */
+  stem: string;
+  alt: string;
+  sizes: string;
+  priority?: boolean;
+  className?: string;
+}): ReactNode {
+  return (
+    <>
+      {(['dark', 'light'] as const).map((theme) => {
+        const base = `${stem}-${theme}`;
+        return (
+          <img
+            key={theme}
+            src={`${base}.png`}
+            srcSet={`${base}-1600w.png 1600w, ${base}-2400w.png 2400w, ${base}.png 3200w`}
+            sizes={sizes}
+            width={3200}
+            height={2000}
+            alt={alt}
+            loading={priority && theme === 'dark' ? 'eager' : 'lazy'}
+            decoding="async"
+            draggable={false}
+            className={clsx(theme === 'dark' ? 'shot-dark' : 'shot-light', className)}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+/**
  * Flat frame around a product screenshot: hairline border, a slim address
  * strip, and status pips echoing the app's connection indicator.
- * `src` is a /public path.
+ * `stem` is a /shots path stem (see ThemedShot).
  */
 export function BrowserFrame({
-  src,
+  stem,
   alt,
   url = 'localhost:8080',
   className,
   priority = false,
 }: {
-  src: string;
+  stem: string;
   alt: string;
   url?: string;
   className?: string;
   priority?: boolean;
 }): ReactNode {
-  /* Screenshots under /shots are committed at 3200x2000 alongside
-     downscaled -1600w/-2400w siblings (see scripts/downscale-shots.mjs).
-     Deriving srcSet from that convention lets the browser pick a variant
-     that fits the layout instead of always paying for the 3200px master.
-     Non-shots images have no variants, so they fall back to a plain src. */
-  const shot = /^\/shots\/[^/]+\.png$/.test(src);
-  const base = shot ? src.replace(/\.png$/, '') : null;
-  const srcSet = base
-    ? `${base}-1600w.png 1600w, ${base}-2400w.png 2400w, ${src} 3200w`
-    : undefined;
-
   return (
     <div
       className={clsx('overflow-hidden rounded-xl border border-border bg-card', className)}>
@@ -164,16 +201,11 @@ export function BrowserFrame({
         </span>
         <span className="min-w-0 truncate text-xs text-muted-foreground">{url}</span>
       </div>
-      <img
-        src={src}
-        srcSet={srcSet}
-        sizes={srcSet ? '(max-width: 768px) 100vw, 1100px' : undefined}
-        width={3200}
-        height={2000}
+      <ThemedShot
+        stem={stem}
         alt={alt}
-        loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
-        draggable={false}
+        sizes="(max-width: 768px) 100vw, 1100px"
+        priority={priority}
         className="block h-auto w-full"
       />
     </div>

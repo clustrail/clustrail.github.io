@@ -1,6 +1,7 @@
 import type {CSSProperties, ReactNode} from 'react';
 import clsx from 'clsx';
 import {RevealSection} from '@/components/landing/reveal-section';
+import {ThemedShot} from '@/components/primitives';
 
 /*
  * Features bento. An asymmetric grid of soft cards: accent title, one-line
@@ -13,6 +14,7 @@ import {RevealSection} from '@/components/landing/reveal-section';
 type Feature = {
   title: string;
   desc: string;
+  /** /shots path stem; ThemedShot appends -dark/-light. */
   shot: string;
   alt: string;
   span?: 'tall' | 'wide';
@@ -22,64 +24,50 @@ const FEATURES: Feature[] = [
   {
     title: 'Cluster overview',
     desc: 'Health, capacity, and activity for the whole cluster on one screen.',
-    shot: '/shots/overview.png',
+    shot: '/shots/overview',
     alt: 'Cluster overview screen with health, capacity and activity panels',
   },
   {
     title: 'Every resource, live',
     desc: 'Virtualized tables stream watch deltas: 10,000 rows at 60 fps.',
-    shot: '/shots/pods.png',
+    shot: '/shots/pods',
     alt: 'Virtualized pods table streaming live watch updates',
   },
   {
     title: 'An IDE-style workspace',
     desc: 'Panes, tabs, YAML with diff, exec and logs that survive navigation.',
-    shot: '/shots/detail.png',
+    shot: '/shots/detail',
     alt: 'Detail workspace with split panes, YAML editor and tabs',
     span: 'tall',
   },
   {
     title: 'Logs across workloads',
     desc: 'One stream aggregating every pod, live, with search.',
-    shot: '/shots/logs.png',
+    shot: '/shots/logs',
     alt: 'Aggregated live log stream across multiple pods',
   },
   {
     title: 'Events as they happen',
     desc: 'A live timeline instead of kubectl get events.',
-    shot: '/shots/events.png',
+    shot: '/shots/events',
     alt: 'Live timeline of cluster events',
   },
   {
     title: 'The cluster as a graph',
     desc: 'Ownership and traffic relationships, laid out live.',
-    shot: '/shots/topology.png',
+    shot: '/shots/topology',
     alt: 'Topology graph of workloads, services and config',
     span: 'wide',
   },
   {
     title: 'Usage joined to requests',
     desc: 'CPU and memory against what you asked for.',
-    shot: '/shots/metrics.png',
+    shot: '/shots/metrics',
     alt: 'CPU and memory usage charts joined to requests and limits',
   },
 ];
 
-/*
- * Screenshots under /shots are committed at 3200x2000 alongside downscaled
- * -1600w/-2400w siblings (see scripts/downscale-shots.mjs), so srcSet is
- * derived from that convention. Tall and wide cards render the image larger
- * on desktop, so their `sizes` hint is roughly doubled.
- */
-function shotSources(shot: string): {srcSet: string} {
-  const base = shot.replace(/\.png$/, '');
-  return {
-    srcSet: `${base}-1600w.png 1600w, ${base}-2400w.png 2400w, ${shot} 3200w`,
-  };
-}
-
 function FeatureCard({feature, index}: {feature: Feature; index: number}): ReactNode {
-  const {srcSet} = shotSources(feature.shot);
   return (
     <div
       className={clsx(
@@ -95,16 +83,12 @@ function FeatureCard({feature, index}: {feature: Feature; index: number}): React
           '-mr-10 -mb-10 mt-6 min-h-0 overflow-hidden rounded-tl-xl border border-border/60 transition-transform group-hover:-translate-y-0.5',
           feature.span ? 'aspect-[16/10] md:aspect-auto md:flex-1' : 'aspect-[16/10]',
         )}>
-        <img
-          src={feature.shot}
-          srcSet={srcSet}
-          sizes={feature.span ? '(max-width: 768px) 100vw, 820px' : '(max-width: 768px) 100vw, 420px'}
-          width={3200}
-          height={2000}
+        {/* Tall and wide cards render the image larger on desktop, so their
+            `sizes` hint is roughly doubled. */}
+        <ThemedShot
+          stem={feature.shot}
           alt={feature.alt}
-          loading="lazy"
-          decoding="async"
-          draggable={false}
+          sizes={feature.span ? '(max-width: 768px) 100vw, 820px' : '(max-width: 768px) 100vw, 420px'}
           className="block h-full w-full object-cover object-left-top"
         />
       </div>

@@ -130,6 +130,30 @@
   --ring: oklch(0.55 0.01 260);
 }
 
+/*
+ * Theme-paired product screenshots. Every shot ships as -dark/-light siblings
+ * rendered as two <img>s; these rules keep exactly one visible, mirroring the
+ * token cascade above (OS preference unless data-theme is stamped). The hidden
+ * sibling is loading="lazy" and display:none, so it is never fetched.
+ */
+.shot-light {
+  display: none;
+}
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) .shot-dark {
+    display: none;
+  }
+  html:not([data-theme]) .shot-light {
+    display: block;
+  }
+}
+[data-theme='light'] .shot-dark {
+  display: none;
+}
+[data-theme='light'] .shot-light {
+  display: block;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
