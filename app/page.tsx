@@ -1,12 +1,21 @@
 import type {ReactNode} from 'react';
+import type {Metadata} from 'next';
 import Hero from '@/components/landing/hero';
-import Mission from '@/components/landing/mission';
-import PerfPanel from '@/components/landing/perf-panel';
+import {ResourceMarquee} from '@/components/landing/resource-marquee';
+import {MetricsBand} from '@/components/landing/metrics-band';
+import {ArchitectureSection} from '@/components/landing/architecture-section';
+import {WatchSection} from '@/components/landing/watch-section';
 import FeatureShowcase from '@/components/landing/feature-showcase';
+import {TrustSection} from '@/components/landing/trust-section';
 import InstallSection from '@/components/landing/install-section';
+import {Faq} from '@/components/landing/faq';
 import FinalCta from '@/components/landing/final-cta';
 import {fetchReleases} from '@/lib/releases';
 import {latestTag} from '@/lib/version';
+
+export const metadata: Metadata = {
+  alternates: {canonical: '/'},
+};
 
 export default async function Home(): Promise<ReactNode> {
   // The latest version comes from the committed changelog (falling back to
@@ -19,10 +28,14 @@ export default async function Home(): Promise<ReactNode> {
   return (
     <main>
       <Hero latest={latest} />
-      <Mission />
-      <PerfPanel />
+      <ResourceMarquee />
+      <MetricsBand />
+      <ArchitectureSection />
+      <WatchSection />
       <FeatureShowcase />
+      <TrustSection />
       <InstallSection />
+      <Faq />
       <FinalCta />
     </main>
   );

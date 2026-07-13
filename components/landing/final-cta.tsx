@@ -1,9 +1,16 @@
 import type {ReactNode} from 'react';
-import {CtaButton, Wordmark} from '@/components/primitives';
+import {CtaButton, StatusLabel, Wordmark} from '@/components/primitives';
+import {RevealSection} from '@/components/landing/reveal-section';
+
+/**
+ * 09 CLOSER. The last word: AGPL line, two GitHub CTAs, and the giant ghost
+ * wordmark fading out at both edges.
+ */
+const REPO = 'https://github.com/clustrail/clustrail';
 
 export default function FinalCta(): ReactNode {
   return (
-    <section className="relative overflow-hidden border-t border-border/60 pt-24 sm:pt-32">
+    <RevealSection className="relative overflow-hidden border-t border-border/60 pt-24 sm:pt-32">
       {/* Brand glow behind the closer. */}
       <div
         aria-hidden
@@ -11,31 +18,22 @@ export default function FinalCta(): ReactNode {
       />
 
       <div className="relative mx-auto flex max-w-3xl flex-col items-center px-6 text-center">
-        <h2 className="text-3xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-5xl">
+        <StatusLabel className="reveal">AGPL-3.0-only</StatusLabel>
+        <h2 className="reveal mt-4 text-3xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-5xl">
           Ready to explore your clusters?
         </h2>
-        <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+        <p className="reveal mt-5 max-w-md text-[15px] leading-relaxed text-muted-foreground">
           One binary, your kubeconfig, and a browser tab. No agents to install, nothing to store,
-          nothing to trust but the API server.
+          nothing to trust but the API server. Open source, all the way down.
         </p>
-        <div className="mt-9 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-          <CtaButton to="/#install" variant="primary">
-            Get started
+        <div className="reveal mt-9 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+          <CtaButton href={REPO} variant="primary">
+            Read the source
           </CtaButton>
-          <CtaButton to="/docs" variant="outline">
-            Browse docs
+          <CtaButton href={`${REPO}/stargazers`} variant="outline">
+            Star on GitHub
           </CtaButton>
         </div>
-        <p className="mt-6 text-sm text-muted-foreground">
-          Open source under AGPL-3.0.{' '}
-          <a
-            href="https://github.com/clustrail/clustrail"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-link transition-colors hover:underline">
-            View the source on GitHub
-          </a>
-        </p>
       </div>
 
       {/* Giant ghost wordmark, edge-faded. */}
@@ -47,6 +45,6 @@ export default function FinalCta(): ReactNode {
           />
         </div>
       </div>
-    </section>
+    </RevealSection>
   );
 }

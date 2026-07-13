@@ -1,23 +1,21 @@
 'use client';
 
-import {useState, type ReactNode} from 'react';
-import clsx from 'clsx';
-import {
-  Activity,
-  Columns2,
-  LayoutDashboard,
-  ScrollText,
-  Share2,
-  Table2,
-  type LucideIcon,
-} from 'lucide-react';
+import type {ReactNode} from 'react';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {BrowserFrame, SectionHeader} from '@/components/primitives';
+import {RevealSection} from '@/components/landing/reveal-section';
+
+/**
+ * 05 SURFACE. The product surface, one tab per view. A vertical tab rail on the
+ * left (each trigger carries a one-line description), the live screenshot on the
+ * right; stacked on mobile. A small client island - only the tab state is
+ * interactive.
+ */
 
 type Feature = {
   id: string;
-  icon: LucideIcon;
-  title: string;
-  blurb: string;
+  label: string;
+  desc: string;
   shot: string;
   url: string;
 };
@@ -25,122 +23,95 @@ type Feature = {
 const FEATURES: Feature[] = [
   {
     id: 'overview',
-    icon: LayoutDashboard,
-    title: 'Cluster overview',
-    blurb: 'Nodes, capacity, workload health and problem pods at a glance.',
+    label: 'Overview',
+    desc: 'Nodes, capacity and problem pods at a glance.',
     shot: '/shots/overview.png',
     url: 'localhost:8080/clusters/kind-clustrail/overview',
   },
   {
-    id: 'topology',
-    icon: Share2,
-    title: 'Topology graph',
-    blurb: 'See how workloads, services and config connect across a namespace.',
-    shot: '/shots/topology.png',
-    url: 'localhost:8080/clusters/kind-clustrail/topology',
-  },
-  {
     id: 'resources',
-    icon: Table2,
-    title: 'Virtualized tables',
-    blurb: 'Every resource type, thousands of rows, only the visible ones in the DOM.',
+    label: 'Resource browser',
+    desc: 'Every type, thousands of rows, only the visible ones in the DOM.',
     shot: '/shots/pods.png',
     url: 'localhost:8080/clusters/kind-clustrail/pods',
   },
   {
-    id: 'workspace',
-    icon: Columns2,
-    title: 'Split-pane workspace',
-    blurb:
-      'Open any resource in a pane beside the list - overview, live YAML, events, logs and in-browser exec.',
-    shot: '/shots/detail.png',
-    url: 'localhost:8080/clusters/kind-clustrail/pods',
-  },
-  {
     id: 'logs',
-    icon: ScrollText,
-    title: 'Streaming logs',
-    blurb: 'Follow multi-pod logs in real time, filtered by level, source and regex.',
+    label: 'Logs',
+    desc: 'Follow multi-pod logs in real time, filtered as you type.',
     shot: '/shots/logs.png',
     url: 'localhost:8080/clusters/kind-clustrail/logs',
   },
   {
     id: 'events',
-    icon: Activity,
-    title: 'Events timeline',
-    blurb: 'A live, color-coded timeline of what your cluster is doing right now.',
+    label: 'Events',
+    desc: 'A live, color-coded timeline of what the cluster is doing.',
     shot: '/shots/events.png',
     url: 'localhost:8080/clusters/kind-clustrail/events',
+  },
+  {
+    id: 'topology',
+    label: 'Topology',
+    desc: 'How workloads, services and config connect across a namespace.',
+    shot: '/shots/topology.png',
+    url: 'localhost:8080/clusters/kind-clustrail/topology',
+  },
+  {
+    id: 'metrics',
+    label: 'Metrics',
+    desc: 'CPU and memory joined to requests and limits, polled at ~12s.',
+    shot: '/shots/metrics.png',
+    url: 'localhost:8080/clusters/kind-clustrail/metrics',
+  },
+  {
+    id: 'detail',
+    label: 'Detail workspace',
+    desc: 'Open any resource beside the list - YAML, events, logs, exec.',
+    shot: '/shots/detail.png',
+    url: 'localhost:8080/clusters/kind-clustrail/pods',
   },
 ];
 
 export default function FeatureShowcase(): ReactNode {
-  const [activeId, setActiveId] = useState(FEATURES[0].id);
-  const active = FEATURES.find((f) => f.id === activeId) ?? FEATURES[0];
-
   return (
-    <section className="border-t border-border/60 py-20 sm:py-28">
+    <RevealSection className="border-t border-border/60 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-6">
         <SectionHeader
-          kicker="Explore"
+          index="05"
+          kicker="Surface"
           title="Everything in one fast pane"
-          lede="Live watch data, virtualized tables, a split-pane workspace with live YAML, streaming logs, events and topology."
+          lede="Live watch data, virtualized tables, a split-pane workspace with YAML, logs, events, topology and metrics."
         />
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,22rem)_1fr] lg:items-stretch">
-          {/* Left: selectable feature tabs. On lg the column stretches to the
-              screenshot's height and the tabs distribute to fill it. */}
-          <div
-            role="tablist"
-            aria-label="Feature showcase"
-            className="flex flex-col gap-2 lg:gap-0 lg:justify-between">
-            {FEATURES.map((feature) => {
-              const Icon = feature.icon;
-              const isActive = feature.id === active.id;
-              return (
-                <button
-                  key={feature.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => setActiveId(feature.id)}
-                  className={clsx(
-                    'group flex w-full cursor-pointer items-start gap-3 rounded-md p-3 text-left transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas',
-                    isActive
-                      ? 'border border-border bg-card'
-                      : 'border border-transparent text-muted-foreground hover:bg-white/5',
-                  )}>
-                  <span
-                    className={clsx(
-                      'flex size-8 shrink-0 items-center justify-center rounded-md transition-colors',
-                      isActive ? 'bg-primary/15 text-link' : 'bg-white/5 text-muted-foreground',
-                    )}>
-                    <Icon className="size-4.5" />
-                  </span>
-                  <span className="min-w-0">
-                    <span
-                      className={clsx(
-                        'block text-sm font-semibold',
-                        isActive ? 'text-foreground' : 'text-foreground/80',
-                      )}>
-                      {feature.title}
-                    </span>
-                    <span className="mt-1 block text-2xs leading-relaxed text-muted-foreground">
-                      {feature.blurb}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        <Tabs
+          defaultValue={FEATURES[0].id}
+          orientation="vertical"
+          className="reveal mt-12 flex flex-col gap-8 lg:flex-row lg:gap-10">
+          <TabsList
+            variant="line"
+            className="h-fit w-full shrink-0 flex-col gap-1 bg-transparent p-0 lg:w-[22rem]">
+            {FEATURES.map((f) => (
+              <TabsTrigger
+                key={f.id}
+                value={f.id}
+                className="h-auto w-full flex-none flex-col items-start gap-1 whitespace-normal rounded-lg border border-transparent p-3 text-left data-active:border-border data-active:bg-card">
+                <span className="block text-sm font-semibold text-foreground">{f.label}</span>
+                <span className="block text-2xs leading-relaxed text-muted-foreground">
+                  {f.desc}
+                </span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-          {/* Right: active screenshot */}
-          <div className="relative min-w-0">
-            <BrowserFrame key={active.id} src={active.shot} alt={active.title} url={active.url} />
+          <div className="min-w-0 flex-1">
+            {FEATURES.map((f) => (
+              <TabsContent key={f.id} value={f.id} className="mt-0">
+                <BrowserFrame src={f.shot} alt={f.label} url={f.url} />
+              </TabsContent>
+            ))}
           </div>
-        </div>
+        </Tabs>
       </div>
-    </section>
+    </RevealSection>
   );
 }

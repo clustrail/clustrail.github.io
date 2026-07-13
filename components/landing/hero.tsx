@@ -1,15 +1,19 @@
-import type {ReactNode} from 'react';
+import type {CSSProperties, ReactNode} from 'react';
 import Link from 'next/link';
-import {BrowserFrame, CtaButton, GradientText, Pill} from '@/components/primitives';
-import {CopyButton} from '@/components/copy-button';
+import {BrowserFrame, CtaButton, GradientText, Pill, StatusLabel} from '@/components/primitives';
+import {RevealSection} from '@/components/landing/reveal-section';
+import {TypedInstall} from '@/components/landing/typed-install';
 
-const INSTALL_CMD = 'curl -fsSL https://clustrail.io/install.sh | sh';
-
+/**
+ * 01 HERO. Staged entrance: headline, subhead, CTAs, install line and the
+ * money-shot screenshot each fade+rise in turn (increasing --reveal-delay).
+ * The section flips to in-view the moment it mounts (it is at the top), so the
+ * sequence plays on load. The install line under the CTAs types itself in.
+ */
 export default function Hero({latest}: {latest: string}): ReactNode {
   return (
-    <section className="relative overflow-hidden pt-20 pb-20 sm:pt-28 sm:pb-28">
-      {/* Dotted-grid backdrop, faded toward the edges - the app's own empty-state
-          texture - under an ambient brand glow. */}
+    <RevealSection className="relative overflow-hidden pt-20 pb-16 sm:pt-28 sm:pb-20" threshold={0}>
+      {/* Dotted-grid backdrop faded toward the edges, under an ambient brand glow. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-dotgrid [mask-image:radial-gradient(ellipse_60%_55%_at_50%_35%,#000,transparent)]"
@@ -20,7 +24,7 @@ export default function Hero({latest}: {latest: string}): ReactNode {
       />
 
       <div className="relative mx-auto flex max-w-6xl flex-col items-center px-6 text-center">
-        <Link href="/changelog" className="no-underline">
+        <Link href="/changelog" className="reveal no-underline">
           <Pill>
             <span className="relative flex size-1.5" aria-hidden>
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-60" />
@@ -30,37 +34,42 @@ export default function Hero({latest}: {latest: string}): ReactNode {
           </Pill>
         </Link>
 
-        <h1 className="mt-8 text-5xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+        <h1
+          className="reveal mt-8 text-5xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl"
+          style={{'--reveal-delay': '0ms'} as CSSProperties}>
           A Kubernetes UI <br className="hidden sm:block" />
           <GradientText>on steroids.</GradientText>
         </h1>
 
-        <p className="mt-7 max-w-xl text-[15px] leading-relaxed text-muted-foreground sm:text-base">
+        <p
+          className="reveal mt-7 max-w-xl text-[15px] leading-relaxed text-muted-foreground sm:text-base"
+          style={{'--reveal-delay': '80ms'} as CSSProperties}>
           One self-contained Go binary serves an embedded React app and acts as an authenticating
           gateway to your clusters. Watch-based and virtualized, so even huge clusters stay
           instant - and your own RBAC is enforced upstream.
         </p>
 
-        <div className="mt-9 flex w-full max-w-md flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center sm:justify-center">
+        <div
+          className="reveal mt-9 flex w-full max-w-md flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center sm:justify-center"
+          style={{'--reveal-delay': '160ms'} as CSSProperties}>
           <CtaButton to="/#install" variant="primary">
             Get started
           </CtaButton>
-          <CtaButton to="/docs" variant="outline">
-            Browse docs
+          <CtaButton to="/architecture" variant="outline">
+            Explore architecture
           </CtaButton>
         </div>
 
-        {/* The one-line install, straight under the CTAs. */}
-        <div className="mt-6 flex h-11 w-full max-w-md items-center gap-2 rounded-lg border border-input bg-card/60 pl-4 pr-1 text-sm backdrop-blur sm:w-auto sm:max-w-none">
-          <span className="select-none font-mono text-link">$</span>
-          <code className="min-w-0 flex-1 truncate font-mono text-[13px] text-foreground">
-            {INSTALL_CMD}
-          </code>
-          <CopyButton text={INSTALL_CMD} />
+        <div
+          className="reveal mt-6 w-full max-w-md sm:w-auto sm:max-w-none"
+          style={{'--reveal-delay': '240ms'} as CSSProperties}>
+          <TypedInstall />
         </div>
 
         {/* The money shot: cluster overview floating on a soft brand glow. */}
-        <div className="relative mt-20 w-full max-w-5xl">
+        <div
+          className="reveal relative mt-20 w-full max-w-5xl"
+          style={{'--reveal-delay': '320ms'} as CSSProperties}>
           <div
             aria-hidden
             className="pointer-events-none absolute -inset-x-16 -top-10 bottom-0 bg-[radial-gradient(ellipse_55%_60%_at_50%_45%,rgba(50,108,229,0.22),transparent)] blur-3xl"
@@ -73,7 +82,16 @@ export default function Hero({latest}: {latest: string}): ReactNode {
             className="relative"
           />
         </div>
+
+        {/* Quantified strip: real measured numbers, mono, hairline-dot separated. */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <StatusLabel>175 KB initial JS</StatusLabel>
+          <span aria-hidden className="size-1 rounded-full bg-muted-foreground/40" />
+          <StatusLabel>49 MB idle RSS</StatusLabel>
+          <span aria-hidden className="size-1 rounded-full bg-muted-foreground/40" />
+          <StatusLabel>one 63 MB binary</StatusLabel>
+        </div>
       </div>
-    </section>
+    </RevealSection>
   );
 }

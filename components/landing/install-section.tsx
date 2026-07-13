@@ -1,9 +1,16 @@
 'use client';
 
-import {useState, type ReactNode} from 'react';
-import clsx from 'clsx';
+import type {ReactNode} from 'react';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
 import {SectionHeader} from '@/components/primitives';
 import {CopyButton} from '@/components/copy-button';
+import {RevealSection} from '@/components/landing/reveal-section';
+
+/**
+ * 07 INSTALL. Four channels behind shadcn tabs, each a copyable command, plus
+ * the example config card. It reads whatever contexts already exist in your
+ * kubeconfig. A small client island for the tab state.
+ */
 
 const CHANNELS = [
   {
@@ -60,39 +67,6 @@ function CommandRow({command}: {command: string}): ReactNode {
   );
 }
 
-function InstallTabs(): ReactNode {
-  const [active, setActive] = useState(CHANNELS[0].id);
-  const current = CHANNELS.find((c) => c.id === active) ?? CHANNELS[0];
-  return (
-    <div className="flex flex-col gap-3">
-      <div
-        role="tablist"
-        aria-label="Install channels"
-        className="inline-flex w-fit max-w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-border bg-card/60 p-1">
-        {CHANNELS.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            role="tab"
-            aria-selected={active === c.id}
-            onClick={() => setActive(c.id)}
-            className={clsx(
-              'inline-flex h-8 shrink-0 cursor-pointer items-center rounded-md px-3.5',
-              'text-sm font-medium transition-colors',
-              active === c.id
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}>
-            {c.label}
-          </button>
-        ))}
-      </div>
-      <CommandRow command={current.command} />
-      <p className="text-sm text-muted-foreground">{current.hint}</p>
-    </div>
-  );
-}
-
 /** Titled code card for the example config. */
 function CodeCard({code, filename}: {code: string; filename: string}): ReactNode {
   return (
@@ -110,19 +84,33 @@ function CodeCard({code, filename}: {code: string; filename: string}): ReactNode
 
 export default function InstallSection(): ReactNode {
   return (
-    <section id="install" className="scroll-mt-20 border-t border-border/60 py-20 sm:py-28">
+    <RevealSection id="install" className="scroll-mt-20 border-t border-border/60 py-20 sm:py-28">
       <div className="mx-auto max-w-2xl px-6">
         <SectionHeader
+          index="07"
           align="left"
           kicker="Install"
           title="Get Clustrail"
           lede="Grab a release binary, run the container image, or deploy the Helm chart. It reads whatever contexts already exist in your kubeconfig."
         />
-        <div className="mt-8">
-          <InstallTabs />
-        </div>
 
-        <div className="mt-14">
+        <Tabs defaultValue={CHANNELS[0].id} className="reveal mt-8 gap-4">
+          <TabsList className="w-fit max-w-full overflow-x-auto">
+            {CHANNELS.map((c) => (
+              <TabsTrigger key={c.id} value={c.id} className="px-3.5">
+                {c.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {CHANNELS.map((c) => (
+            <TabsContent key={c.id} value={c.id} className="flex flex-col gap-3">
+              <CommandRow command={c.command} />
+              <p className="text-sm text-muted-foreground">{c.hint}</p>
+            </TabsContent>
+          ))}
+        </Tabs>
+
+        <div className="reveal mt-14">
           <SectionHeader
             align="left"
             kicker="Configure"
@@ -142,6 +130,6 @@ export default function InstallSection(): ReactNode {
           </div>
         </div>
       </div>
-    </section>
+    </RevealSection>
   );
 }
