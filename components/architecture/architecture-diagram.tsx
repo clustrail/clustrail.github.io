@@ -107,13 +107,13 @@ const TIERS: Tier[] = [
  * The canvas is tilted rotateX(50deg) rotateZ(35deg). Altitudes are translateZ
  * in px. Everything below is a module constant: nothing is computed per frame.
  */
-const CANVAS_W = 640;
-const CANVAS_H = 460;
+const CANVAS_W = 700;
+const CANVAS_H = 520;
 /** The fixed stage the tilted scene renders into; scaled to fit the wrapper. */
-const STAGE_W = 830;
-const STAGE_H = 560;
+const STAGE_W = 940;
+const STAGE_H = 700;
 const CANVAS_LEFT = (STAGE_W - CANVAS_W) / 2;
-const CANVAS_TOP = 112;
+const CANVAS_TOP = 160;
 const TILT = 'rotateX(50deg) rotateZ(35deg)';
 
 /* The scene renders orthographically (no perspective property), so this
@@ -146,14 +146,14 @@ interface BoxGeom {
 }
 
 /** TIER 1 - the cluster base: widest, thinnest slab at ground level. */
-const BASE: BoxGeom = {x: 60, y: 55, w: 520, h: 350, base: 0, depth: 16};
+const BASE: BoxGeom = {x: 45, y: 40, w: 550, h: 380, base: 0, depth: 16};
 
 /** Apiserver chips in a row on the base's front band (even 25px margins and
  *  gaps; the front strip below them carries the base label). */
 const CHIP_W = 140;
 const CHIP_H = 58;
-const CHIP_Y = 306;
-const CHIPS: BoxGeom[] = [85, 250, 415].map((cx) => ({
+const CHIP_Y = 298;
+const CHIPS: BoxGeom[] = [75, 250, 425].map((cx) => ({
   x: cx,
   y: CHIP_Y,
   w: CHIP_W,
@@ -165,21 +165,21 @@ const CHIP_NAMES = ['cluster-a', 'cluster-b', 'cluster-c'];
 
 /** TIER 2 - the Go gateway platform, floating at z=114, centered on the
  *  tower axis (canvas 320, 230). */
-const PLATFORM: BoxGeom = {x: 100, y: 90, w: 440, h: 280, base: 114, depth: 24};
+const PLATFORM: BoxGeom = {x: 85, y: 75, w: 470, h: 310, base: 150, depth: 24};
 
 /** Gateway internals on the platform top (z=138), arranged in the L that the
  *  floating SPA slab's silhouette never hides: three across the front band
  *  (24px side margins), one on the right flank. The middle watch beam rises
  *  directly beneath the informer cache. */
-const AUTH: BoxGeom = {x: 124, y: 222, w: 100, h: 96, base: 138, depth: 24};
-const CACHE: BoxGeom = {x: 240, y: 222, w: 118, h: 96, base: 138, depth: 28};
-const MUX: BoxGeom = {x: 398, y: 222, w: 118, h: 96, base: 138, depth: 28};
-const SWR: BoxGeom = {x: 408, y: 122, w: 108, h: 76, base: 138, depth: 22};
+const AUTH: BoxGeom = {x: 109, y: 245, w: 100, h: 96, base: 174, depth: 24};
+const CACHE: BoxGeom = {x: 249, y: 245, w: 118, h: 96, base: 174, depth: 28};
+const MUX: BoxGeom = {x: 407, y: 245, w: 118, h: 96, base: 174, depth: 28};
+const SWR: BoxGeom = {x: 423, y: 138, w: 108, h: 76, base: 174, depth: 22};
 
 /** TIER 4 - the browser SPA slab: smallest footprint, top of the tower. */
-const SLAB: BoxGeom = {x: 171, y: 165, w: 298, h: 130, base: 260, depth: 22};
-const STORE: BoxGeom = {x: 185, y: 179, w: 126, h: 56, base: 282, depth: 14};
-const VTABLE: BoxGeom = {x: 329, y: 179, w: 126, h: 56, base: 282, depth: 14};
+const SLAB: BoxGeom = {x: 166, y: 158, w: 308, h: 140, base: 340, depth: 22};
+const STORE: BoxGeom = {x: 180, y: 174, w: 128, h: 60, base: 362, depth: 14};
+const VTABLE: BoxGeom = {x: 330, y: 174, w: 128, h: 60, base: 362, depth: 14};
 
 /** A vertical beam terminus, solved geometrically: the beam's top altitude is
  *  authored so its projected top edge lands EXACTLY on the projected
@@ -207,7 +207,7 @@ const WATCH_BEAMS: BeamGeom[] = CHIPS.map((c) =>
   solveBeam(c.x + CHIP_W / 2, CHIP_Y + CHIP_H / 2, c.base + c.depth, PLATFORM),
 );
 /** The hero WebSocket beam: multiplexer top face up to the SPA slab. */
-const HERO_AT = {x: 430, y: 300};
+const HERO_AT = {x: 440, y: 320};
 const HERO = solveBeam(HERO_AT.x, HERO_AT.y, MUX.base + MUX.depth, SLAB);
 
 /** Flat glowing traces (lying in-plane at a given altitude). */
@@ -230,7 +230,7 @@ function trace(x1: number, y1: number, x2: number, y2: number, z: number): Trace
 }
 /** snapshots + deltas: cache top -> multiplexer top, bridging the gap near
  *  the boxes' front corners so the hero beam's glow never swallows it. */
-const SNAP_TRACE: TraceGeom = trace(CACHE.x + CACHE.w, 300, MUX.x, 300, 166);
+const SNAP_TRACE: TraceGeom = trace(CACHE.x + CACHE.w, 316, MUX.x, 316, MUX.base + MUX.depth);
 
 /** Soft drop shadows under the floating levels, lying flat on the surface
  *  below, shifted half the occlusion offset toward the viewer so they peek
@@ -238,8 +238,8 @@ const SNAP_TRACE: TraceGeom = trace(CACHE.x + CACHE.w, 300, MUX.x, 300, 166);
  *  itself hidden by the slab that casts it). Rects are trimmed to avoid
  *  intersecting any standing box's walls. */
 const SHADOWS: Array<{x: number; y: number; w: number; h: number; z: number; delay: number}> = [
-  {x: 70, y: 60, w: 440, h: 238, z: BASE.depth + 1, delay: 480},      // gateway -> base
-  {x: 129, y: 105, w: 275, h: 113, z: PLATFORM.base + PLATFORM.depth + 1, delay: 930}, // slab -> gateway
+  {x: 55, y: 45, w: 470, h: 250, z: BASE.depth + 1, delay: 480},      // gateway -> base
+  {x: 124, y: 98, w: 285, h: 140, z: PLATFORM.base + PLATFORM.depth + 1, delay: 930}, // slab -> gateway
 ];
 
 /** Flow captions: 2D overlay text pinned at exact projected coordinates
@@ -255,23 +255,25 @@ interface Caption {
 const CAPTIONS: Caption[] = [
   {
     lines: ['watch'],
-    at: proj(WATCH_BEAMS[0].x, WATCH_BEAMS[0].y, 60), // left watch beam, upper half
+    at: proj(WATCH_BEAMS[0].x, WATCH_BEAMS[0].y, 90), // left watch beam, upper half
     dx: -12,
     dy: -14,
     align: 'right',
   },
   {
     lines: ['snapshots + deltas'],
-    at: proj(378, 300, SNAP_TRACE.z), // the cache -> multiplexer bridge, midpoint
+    at: proj(387, 316, SNAP_TRACE.z), // the cache -> multiplexer bridge, midpoint
     dx: 18,
     dy: 22,
     align: 'right',
   },
   {
     lines: ['one WebSocket', 'deltas only'],
-    at: proj(HERO_AT.x, HERO_AT.y, 230), // hero beam, upper half
-    dx: 14,
-    dy: 2,
+    // The only collision-free air near the hero beam: right of the slab's
+    // corner, above the SWR box (checked against every projected face).
+    at: proj(HERO_AT.x, HERO_AT.y, 335),
+    dx: 134,
+    dy: -30,
     align: 'left',
   },
 ];
@@ -281,9 +283,13 @@ const CAPTIONS: Caption[] = [
  * near-white light canvas too; walls reuse the face fill under a translucent
  * black overlay, which shades correctly in both themes.
  */
-const FACE_PLATFORM = 'color-mix(in oklch, var(--card), var(--foreground) 4%)';
-const FACE_BOX = 'color-mix(in oklch, var(--card), var(--foreground) 7%)';
-const FACE_CHIP = 'color-mix(in oklch, var(--card), var(--foreground) 5%)';
+/* Faces mix the card surface toward a theme-aware tint: near-white foreground
+ * in dark (the original look), the official Kubernetes blue in light so the
+ * slabs read as tinted instrument panels instead of grey card stock. The
+ * --arch-tint variable is flipped by sceneCss for both light-theme signals. */
+const FACE_PLATFORM = 'color-mix(in oklch, var(--card), var(--arch-tint, var(--foreground)) 5%)';
+const FACE_BOX = 'color-mix(in oklch, var(--card), var(--arch-tint, var(--foreground)) 8%)';
+const FACE_CHIP = 'color-mix(in oklch, var(--card), var(--arch-tint, var(--foreground)) 6%)';
 const EDGE = 'var(--border)';
 const EDGE_ACCENT = 'color-mix(in oklch, var(--primary), transparent 45%)';
 /** k8s-blue accent for the cluster base level. */
@@ -326,6 +332,10 @@ function useFitScale(ref: React.RefObject<HTMLDivElement | null>): number {
 /* ---- scene-scoped keyframes (unique per variant) --------------------------- */
 function sceneCss(v: Variant): string {
   return `
+[data-theme="light"] .arch3d-stage-${v} { --arch-tint: var(--primary); }
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) .arch3d-stage-${v} { --arch-tint: var(--primary); }
+}
 @keyframes arch3d-rise-${v} {
   0%   { transform: translateY(0); opacity: 0; }
   10%  { opacity: 1; }
@@ -711,6 +721,7 @@ function Scene({
   return (
     <div ref={wrapRef} className="hidden w-full md:block" style={{height: STAGE_H * scale}}>
       <div
+        className={`arch3d-stage-${variant}`}
         style={{
           width: STAGE_W,
           height: STAGE_H,
@@ -750,7 +761,7 @@ function Scene({
                   'absolute inset-0 rounded-[3px] bg-transparent text-left',
                   tierBtn('apiservers'),
                 )}>
-                <span className="absolute bottom-2 left-4">
+                <span className="absolute bottom-3 left-4">
                   <span className="block font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground">
                     Your clusters&apos; apiservers
                   </span>
@@ -774,7 +785,7 @@ function Scene({
                   height: s.h,
                   transform: `translateZ(${s.z}px)`,
                   background:
-                    'radial-gradient(ellipse closest-side, rgb(0 0 0 / 0.26), transparent 74%)',
+                    'radial-gradient(ellipse closest-side, rgb(0 0 0 / 0.16), transparent 78%)',
                   opacity: settled ? 1 : 0,
                   transition: `opacity 700ms ease-out ${s.delay}ms`,
                   pointerEvents: 'none',
