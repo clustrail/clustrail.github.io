@@ -16,6 +16,21 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: 'Clustrail',
     type: 'website',
+    images: [
+      {
+        url: '/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Clustrail - A Kubernetes UI on steroids',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Clustrail - A Kubernetes UI on steroids',
+    description:
+      'Clustrail is a Kubernetes UI on steroids: a fast, lightweight web UI served from a single self-contained Go binary. Watch-based, virtualized, and RBAC-respecting.',
+    images: ['/og.png'],
   },
 };
 

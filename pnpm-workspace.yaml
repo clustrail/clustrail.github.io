@@ -1,4 +1,4 @@
 allowBuilds:
   core-js: true
-  # sharp powers next/image optimization, which output:export doesn't use.
-  sharp: false
+  # sharp drives OG-image and screenshot generation (scripts/).
+  sharp: true

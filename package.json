@@ -7,8 +7,11 @@
     "dev": "next dev",
     "start": "next dev",
     "build": "next build",
+    "postbuild": "pagefind --site out",
     "serve": "npx serve out",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "shots:build": "node scripts/downscale-shots.mjs",
+    "og:build": "node scripts/gen-og.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
@@ -36,6 +39,8 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "pagefind": "^1.4.0",
+    "sharp": "^0.34.2",
     "tailwindcss": "^4.3.2",
     "typescript": "~5.9.2"
   },

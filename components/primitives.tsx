@@ -181,6 +181,17 @@ export function BrowserFrame({
   className?: string;
   priority?: boolean;
 }): ReactNode {
+  /* Screenshots under /shots are committed at 3200x2000 alongside
+     downscaled -1600w/-2400w siblings (see scripts/downscale-shots.mjs).
+     Deriving srcSet from that convention lets the browser pick a variant
+     that fits the layout instead of always paying for the 3200px master.
+     Non-shots images have no variants, so they fall back to a plain src. */
+  const shot = /^\/shots\/[^/]+\.png$/.test(src);
+  const base = shot ? src.replace(/\.png$/, '') : null;
+  const srcSet = base
+    ? `${base}-1600w.png 1600w, ${base}-2400w.png 2400w, ${src} 3200w`
+    : undefined;
+
   return (
     <div
       className={clsx('overflow-hidden rounded-xl border border-border bg-card', className)}>
@@ -194,6 +205,10 @@ export function BrowserFrame({
       </div>
       <img
         src={src}
+        srcSet={srcSet}
+        sizes={srcSet ? '(max-width: 768px) 100vw, 1100px' : undefined}
+        width={3200}
+        height={2000}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
