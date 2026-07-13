@@ -1,15 +1,26 @@
-import type {CSSProperties, ReactNode} from 'react';
-import clsx from 'clsx';
-import {RevealSection} from '@/components/landing/reveal-section';
-import {ThemedShot} from '@/components/primitives';
+'use client';
 
 /*
- * Features bento. An asymmetric grid of soft cards: accent title, one-line
- * description, and a raw product screenshot bleeding off the card's bottom-right
- * edge (cropped by the card's overflow-hidden, anchored top-left so each card
- * reads as a window into the app). One tall card spans two rows, one wide card
- * spans two columns. Pure RSC - no state.
+ * Features slideshow. One feature at a time: title and one-liner above a large
+ * browser-framed screenshot, arrows at the sides (hidden on touch widths -
+ * swipe there) and dot indicators below. Loops, and auto-advances every few
+ * seconds while on screen - pausing on hover, stopping entirely under reduced
+ * motion, and resetting its timer whenever the visitor navigates manually.
+ * The screenshots stay theme-paired via ThemedShot inside BrowserFrame.
  */
+import {useEffect, useState, type ReactNode} from 'react';
+import clsx from 'clsx';
+import {useInView} from '@/lib/use-in-view';
+import {RevealSection} from '@/components/landing/reveal-section';
+import {BrowserFrame} from '@/components/primitives';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from '@/components/ui/carousel';
 
 type Feature = {
   title: string;
@@ -17,7 +28,8 @@ type Feature = {
   /** /shots path stem; ThemedShot appends -dark/-light. */
   shot: string;
   alt: string;
-  span?: 'tall' | 'wide';
+  /** Address-strip path shown in the browser frame. */
+  url: string;
 };
 
 const FEATURES: Feature[] = [
@@ -26,77 +38,80 @@ const FEATURES: Feature[] = [
     desc: 'Health, capacity, and activity for the whole cluster on one screen.',
     shot: '/shots/overview',
     alt: 'Cluster overview screen with health, capacity and activity panels',
+    url: 'localhost:8080/clusters/kind-clustrail/overview',
   },
   {
     title: 'Every resource, live',
     desc: 'Virtualized tables stream watch deltas: 10,000 rows at 60 fps.',
     shot: '/shots/pods',
     alt: 'Virtualized pods table streaming live watch updates',
+    url: 'localhost:8080/clusters/kind-clustrail/pods',
   },
   {
     title: 'An IDE-style workspace',
     desc: 'Panes, tabs, YAML with diff, exec and logs that survive navigation.',
     shot: '/shots/detail',
     alt: 'Detail workspace with split panes, YAML editor and tabs',
-    span: 'tall',
+    url: 'localhost:8080/clusters/kind-clustrail/pods',
   },
   {
     title: 'Logs across workloads',
     desc: 'One stream aggregating every pod, live, with search.',
     shot: '/shots/logs',
     alt: 'Aggregated live log stream across multiple pods',
+    url: 'localhost:8080/clusters/kind-clustrail/logs',
   },
   {
     title: 'Events as they happen',
     desc: 'A live timeline instead of kubectl get events.',
     shot: '/shots/events',
     alt: 'Live timeline of cluster events',
+    url: 'localhost:8080/clusters/kind-clustrail/events',
   },
   {
     title: 'The cluster as a graph',
     desc: 'Ownership and traffic relationships, laid out live.',
     shot: '/shots/topology',
     alt: 'Topology graph of workloads, services and config',
-    span: 'wide',
+    url: 'localhost:8080/clusters/kind-clustrail/topology',
   },
   {
     title: 'Usage joined to requests',
     desc: 'CPU and memory against what you asked for.',
     shot: '/shots/metrics',
     alt: 'CPU and memory usage charts joined to requests and limits',
+    url: 'localhost:8080/clusters/kind-clustrail/metrics',
   },
 ];
 
-function FeatureCard({feature, index}: {feature: Feature; index: number}): ReactNode {
-  return (
-    <div
-      className={clsx(
-        'reveal group relative flex flex-col overflow-hidden rounded-3xl border border-border/60 bg-card p-6 shadow-sm transition-colors hover:border-border',
-        feature.span === 'tall' && 'md:row-span-2',
-        feature.span === 'wide' && 'md:col-span-2',
-      )}
-      style={{'--reveal-delay': `${index * 70}ms`} as CSSProperties}>
-      <h3 className="text-base font-semibold text-primary">{feature.title}</h3>
-      <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">{feature.desc}</p>
-      <div
-        className={clsx(
-          '-mr-10 -mb-10 mt-6 min-h-0 overflow-hidden rounded-tl-xl border border-border/60 transition-transform group-hover:-translate-y-0.5',
-          feature.span ? 'aspect-[16/10] md:aspect-auto md:flex-1' : 'aspect-[16/10]',
-        )}>
-        {/* Tall and wide cards render the image larger on desktop, so their
-            `sizes` hint is roughly doubled. */}
-        <ThemedShot
-          stem={feature.shot}
-          alt={feature.alt}
-          sizes={feature.span ? '(max-width: 768px) 100vw, 820px' : '(max-width: 768px) 100vw, 420px'}
-          className="block h-full w-full object-cover object-left-top"
-        />
-      </div>
-    </div>
-  );
-}
+const AUTO_ADVANCE_MS = 5000;
 
 export default function FeatureShowcase(): ReactNode {
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+  const [hovered, setHovered] = useState(false);
+  const [stageRef, inView] = useInView<HTMLDivElement>({once: false, threshold: 0.35});
+
+  useEffect(() => {
+    if (!api) return;
+    const onSelect = () => setCurrent(api.selectedScrollSnap());
+    onSelect();
+    api.on('select', onSelect);
+    return () => {
+      api.off('select', onSelect);
+    };
+  }, [api]);
+
+  // Auto-advance. Depending on `current` restarts the interval after every
+  // slide change, so a manual arrow/dot/swipe gets a full dwell before the
+  // loop moves on.
+  useEffect(() => {
+    if (!api || !inView || hovered) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const id = setInterval(() => api.scrollNext(), AUTO_ADVANCE_MS);
+    return () => clearInterval(id);
+  }, [api, inView, hovered, current]);
+
   return (
     <RevealSection className="border-b border-border py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-6">
@@ -111,9 +126,52 @@ export default function FeatureShowcase(): ReactNode {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
+        <div
+          ref={stageRef}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}>
+          <Carousel setApi={setApi} opts={{loop: true}} className="reveal mt-12">
+          <CarouselContent>
+            {FEATURES.map((feature) => (
+              <CarouselItem key={feature.shot}>
+                <div className="mx-auto flex max-w-4xl flex-col gap-6">
+                  <div className="flex flex-col items-center gap-1.5 text-center">
+                    <h3 className="text-lg font-semibold text-primary">{feature.title}</h3>
+                    <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
+                      {feature.desc}
+                    </p>
+                  </div>
+                  <BrowserFrame
+                    stem={feature.shot}
+                    alt={feature.alt}
+                    url={feature.url}
+                    className="shadow-sm"
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+            <CarouselPrevious className="hidden sm:inline-flex" />
+            <CarouselNext className="hidden sm:inline-flex" />
+          </Carousel>
+        </div>
+
+        {/* Dot indicators: one per feature, the active one stretched. */}
+        <div className="mt-8 flex justify-center gap-2">
           {FEATURES.map((feature, i) => (
-            <FeatureCard key={feature.shot} feature={feature} index={i} />
+            <button
+              key={feature.shot}
+              type="button"
+              aria-label={`Go to slide ${i + 1}: ${feature.title}`}
+              aria-current={i === current}
+              onClick={() => api?.scrollTo(i)}
+              className={clsx(
+                'h-1.5 rounded-full transition-all',
+                i === current
+                  ? 'w-6 bg-primary'
+                  : 'w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/60',
+              )}
+            />
           ))}
         </div>
       </div>
