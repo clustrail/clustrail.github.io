@@ -10,9 +10,9 @@ import WatchStream from '@/components/landing/watch-stream';
  */
 
 const SPECS: Array<{label: string; budget: string; measured: string}> = [
-  {label: 'Initial JS', budget: 'tracked, not capped', measured: 'measured 175 KB'},
   {label: 'Delta apply', budget: 'budget 8 ms', measured: 'hit'},
   {label: '10k rows', budget: '60 fps', measured: 'only visible rows in the DOM'},
+  {label: 'Snapshot', budget: 'warm cache', measured: 'measured 1.5 ms'},
   {label: 'Idle RSS', budget: 'budget 80 MB', measured: 'measured 49 MB'},
 ];
 

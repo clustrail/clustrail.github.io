@@ -72,7 +72,7 @@ export default function Hero({latest}: {latest: string}): ReactNode {
         <p
           className="reveal mt-12 text-sm text-muted-foreground"
           style={{'--reveal-delay': '320ms'} as CSSProperties}>
-          175 KB initial JS · 49 MB idle · one 63 MB binary
+          &lt; 8 ms watch deltas · 49 MB idle · one static binary
         </p>
       </div>
     </RevealSection>

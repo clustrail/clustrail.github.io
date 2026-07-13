@@ -31,4 +31,4 @@ Release notes for each version are on the [changelog](/changelog).
 - A modern browser.
 - No other runtime dependencies: no Node.js, no database, no agents inside the clusters.
 
-Clustrail is lightweight by design: the binary is a few dozen megabytes, idles well under 100 MB of memory for a typical cluster, and serves an initial UI bundle small enough to load fast on any connection.
+Clustrail is lightweight by design: it idles well under 100 MB of memory for a typical cluster, and the UI loads fast on any connection.

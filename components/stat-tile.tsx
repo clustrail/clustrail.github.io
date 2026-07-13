@@ -55,9 +55,9 @@ export function StatTile({
   prefix?: string;
   /** Unit rendered after the number: "KB", "ms", "MB", "fps". */
   suffix: string;
-  /** What the number is: "initial JS, gzipped". */
+  /** What the number is: "backend idle RSS". */
   label: string;
-  /** The honest condition: "budget 350 KB", "measured, local cluster". */
+  /** The honest condition: "budget 80 MB", "measured, local cluster". */
   sublabel?: string;
   className?: string;
 }): React.ReactNode {

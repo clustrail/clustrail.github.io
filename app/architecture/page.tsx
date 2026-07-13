@@ -107,11 +107,10 @@ const RECEIPTS: Array<{
   label: string;
   sublabel: string;
 }> = [
-  {value: 175, suffix: 'KB', label: 'Initial JS, gzipped', sublabel: 'measured · tracked, not capped'},
   {value: 8, prefix: '<', suffix: 'ms', label: 'Watch delta applied', sublabel: 'budget · 10,000-row table'},
   {value: 1.5, decimals: 1, suffix: 'ms', label: 'Subscribe to snapshot', sublabel: 'measured · warm informer cache'},
+  {value: 60, suffix: 'fps', label: '10,000-row tables', sublabel: 'only visible rows in the DOM'},
   {value: 49, suffix: 'MB', label: 'Backend idle RSS', sublabel: 'one cluster · budget 80 MB'},
-  {value: 63, suffix: 'MB', label: 'Static binary', sublabel: 'linux/amd64 · SPA embedded'},
 ];
 
 function StepList({
@@ -243,10 +242,10 @@ export default function ArchitecturePage(): ReactNode {
           <SectionHeader
             kicker="Performance"
             title="The budgets are real."
-            lede="These are not marketing numbers. The JS, frame, delta, and memory figures are CI gates on every change, measured against a local kind cluster."
+            lede="These are not marketing numbers. The frame, delta, and memory figures are CI gates on every change, measured against a local kind cluster."
             align="left"
           />
-          <div className="mt-12 grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="mt-12 grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
             {RECEIPTS.map((r) => (
               <StatTile
                 key={r.label}
@@ -261,9 +260,8 @@ export default function ArchitecturePage(): ReactNode {
           </div>
           <p className="mt-12 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Method: figures are taken against the local three-node kind cluster the project
-            develops on. The binary size is a single-platform stripped build with the SPA embedded.
-            A change that ships over a runtime budget is not done - it is raised as a tradeoff, not
-            merged.
+            develops on. A change that ships over a runtime budget is not done - it is raised as a
+            tradeoff, not merged.
           </p>
 
           <p className="mt-6 text-sm text-muted-foreground">

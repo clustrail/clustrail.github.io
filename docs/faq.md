@@ -37,7 +37,7 @@ Two decisions:
 ### How much resource does it need?
 
 Very little.
-The binary is a few dozen megabytes, the backend typically idles well under 100 MB of RAM for a cluster, and the default in-cluster resources are 50m CPU / 64Mi memory requests.
+The backend typically idles well under 100 MB of RAM for a cluster, and the default in-cluster resources are 50m CPU / 64Mi memory requests.
 
 ### Does it need a database?
 
