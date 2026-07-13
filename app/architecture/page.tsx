@@ -1,5 +1,6 @@
 import type {ReactNode, CSSProperties} from 'react';
 import type {Metadata} from 'next';
+import {Rss, PencilLine, ShieldCheck} from 'lucide-react';
 import {SectionHeader, CtaButton} from '@/components/primitives';
 import {StatTile} from '@/components/stat-tile';
 import {Card} from '@/components/ui/card';
@@ -62,6 +63,29 @@ const WRITE_PATH: Array<{k: string; body: string}> = [
   {k: 'The watch delta confirms', body: 'The resulting change returns through the same watch stream, so the list you are looking at updates itself.'},
 ];
 
+const LIFECYCLE = [
+  {
+    title: 'Read path',
+    tagline: 'How data reaches your screen.',
+    icon: Rss,
+    steps: READ_PATH,
+    outcome: {
+      live: true,
+      text: 'Live from here on - only deltas cross the wire.',
+    },
+  },
+  {
+    title: 'Write path',
+    tagline: 'How a change confirms itself.',
+    icon: PencilLine,
+    steps: WRITE_PATH,
+    outcome: {
+      live: false,
+      text: 'RBAC enforced upstream on every write.',
+    },
+  },
+];
+
 /* 04 - the eight load-bearing decisions, curated from the repo's ARCHITECTURE.md. */
 const DECISIONS: Array<{title: string; why: string}> = [
   {
@@ -113,33 +137,54 @@ const RECEIPTS: Array<{
   {value: 49, suffix: 'MB', label: 'Backend idle RSS', sublabel: 'one cluster · budget 80 MB'},
 ];
 
-function StepList({
-  steps,
-  title,
-}: {
-  steps: Array<{k: string; body: string}>;
-  title: string;
-}): ReactNode {
+function LifecycleCard({flow}: {flow: (typeof LIFECYCLE)[number]}): ReactNode {
   return (
-    <Card className="p-6 sm:p-7">
-      <span className="text-sm font-semibold text-primary">{title}</span>
-      <ol className="relative m-0 mt-5 flex list-none flex-col gap-5 border-l border-border pl-6">
-        {steps.map((s, i) => (
+    <Card className="flex flex-col p-6 sm:p-7">
+      {/* Card header: icon tile, name, one-line summary. */}
+      <div className="flex items-center gap-3.5">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
+          <flow.icon className="size-[1.125rem] text-primary" aria-hidden />
+        </span>
+        <div className="flex flex-col">
+          <h3 className="text-sm font-semibold text-foreground">{flow.title}</h3>
+          <span className="text-xs text-muted-foreground">{flow.tagline}</span>
+        </div>
+      </div>
+
+      {/* Numbered steps on a connector rail. */}
+      <ol className="relative m-0 mt-7 flex flex-1 list-none flex-col gap-7 p-0">
+        <span
+          aria-hidden
+          className="absolute bottom-4 left-[0.8125rem] top-4 w-px bg-border"
+        />
+        {flow.steps.map((s, i) => (
           <li
             key={s.k}
-            className="reveal relative"
+            className="reveal relative pl-11"
             style={{'--reveal-delay': `${i * 90}ms`} as CSSProperties}>
-            {/* Node dot sitting on the connector line. */}
             <span
               aria-hidden
-              className="absolute -left-[1.6875rem] top-1 flex size-4 items-center justify-center rounded-full border border-border bg-card">
-              <span className="size-1.5 rounded-full bg-primary" />
+              className="absolute left-0 top-0 flex size-[1.625rem] items-center justify-center rounded-full border border-border bg-card text-xs font-semibold text-primary tabular-nums">
+              {i + 1}
             </span>
             <span className="text-sm font-medium text-foreground">{s.k}</span>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
           </li>
         ))}
       </ol>
+
+      {/* Where the flow lands. Green stays reserved for the live watch signal. */}
+      <div className="mt-7 flex items-center gap-2.5 rounded-lg border border-border bg-background/60 px-4 py-3">
+        {flow.outcome.live ? (
+          <span className="relative flex size-1.5 shrink-0" aria-hidden>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-60" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-live" />
+          </span>
+        ) : (
+          <ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden />
+        )}
+        <span className="text-xs font-medium text-foreground/80">{flow.outcome.text}</span>
+      </div>
     </Card>
   );
 }
@@ -197,8 +242,9 @@ export default function ArchitecturePage(): ReactNode {
             align="left"
           />
           <div className="mt-12 grid gap-6 lg:grid-cols-2">
-            <StepList title="Read path" steps={READ_PATH} />
-            <StepList title="Write path" steps={WRITE_PATH} />
+            {LIFECYCLE.map((flow) => (
+              <LifecycleCard key={flow.title} flow={flow} />
+            ))}
           </div>
         </div>
       </RevealSection>
@@ -262,19 +308,6 @@ export default function ArchitecturePage(): ReactNode {
             Method: figures are taken against the local three-node kind cluster the project
             develops on. A change that ships over a runtime budget is not done - it is raised as a
             tradeoff, not merged.
-          </p>
-
-          <p className="mt-6 text-sm text-muted-foreground">
-            This page is the short version. The full document, written against the code, lives in
-            the repo:{' '}
-            <a
-              href="https://github.com/clustrail/clustrail/blob/main/ARCHITECTURE.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-link underline-offset-4 hover:underline">
-              ARCHITECTURE.md
-            </a>
-            .
           </p>
 
           <div className="mt-14 flex flex-col gap-3 sm:flex-row sm:items-center">
