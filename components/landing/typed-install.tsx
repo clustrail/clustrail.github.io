@@ -52,7 +52,7 @@ export function TypedInstall({className}: {className?: string}): ReactNode {
         <span
           aria-hidden
           className={clsx(
-            'ml-0.5 inline-block h-[1.05em] w-[0.5ch] shrink-0 translate-y-[0.12em] bg-foreground/70',
+            'ml-0.5 inline-block h-[1.05em] w-[0.5ch] shrink-0 bg-foreground/70',
             typing ? '' : 'animate-caret',
           )}
         />

@@ -114,7 +114,7 @@ export default function WatchStream({className}: {className?: string}): ReactNod
           <span className="text-live">$</span>
           <span
             aria-hidden
-            className="inline-block h-[1.05em] w-[0.5ch] translate-y-[0.12em] animate-caret bg-foreground/70"
+            className="inline-block h-[1.05em] w-[0.5ch] animate-caret bg-foreground/70"
           />
         </li>
       </ul>
