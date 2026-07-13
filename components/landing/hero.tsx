@@ -1,12 +1,12 @@
 import type {CSSProperties, ReactNode} from 'react';
 import Link from 'next/link';
-import {BrowserFrame, CtaButton, GradientText, Pill} from '@/components/primitives';
+import {CtaButton, GradientText, Pill} from '@/components/primitives';
 import {RevealSection} from '@/components/landing/reveal-section';
 import {TypedInstall} from '@/components/landing/typed-install';
 
 /**
  * 01 HERO. Staged entrance: headline, subhead, CTAs, install line and the
- * money-shot screenshot each fade+rise in turn (increasing --reveal-delay).
+ * quantified strip each fade+rise in turn (increasing --reveal-delay).
  * The section flips to in-view the moment it mounts (it is at the top), so the
  * sequence plays on load. The install line under the CTAs types itself in.
  */
@@ -68,25 +68,10 @@ export default function Hero({latest}: {latest: string}): ReactNode {
           <TypedInstall />
         </div>
 
-        {/* The money shot: cluster overview floating on a soft brand glow. */}
-        <div
-          className="reveal relative mt-20 w-full max-w-5xl"
-          style={{'--reveal-delay': '320ms'} as CSSProperties}>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-x-16 -top-10 bottom-0 bg-[radial-gradient(ellipse_55%_60%_at_50%_45%,rgba(50,108,229,0.22),transparent)] blur-3xl"
-          />
-          <BrowserFrame
-            stem="/shots/overview"
-            alt="The Clustrail cluster overview"
-            url="localhost:8080/clusters/kind-clustrail/overview"
-            priority
-            className="relative"
-          />
-        </div>
-
         {/* Quantified strip: real measured numbers, one quiet line. */}
-        <p className="mt-10 text-sm text-muted-foreground">
+        <p
+          className="reveal mt-12 text-sm text-muted-foreground"
+          style={{'--reveal-delay': '320ms'} as CSSProperties}>
           175 KB initial JS · 49 MB idle · one 63 MB binary
         </p>
       </div>
