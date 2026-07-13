@@ -110,16 +110,9 @@ export default function Footer(): ReactNode {
             ))}
           </div>
 
-          {/* Legal + status strip. */}
-          <div className="mt-12 flex flex-col gap-3 border-t border-border/60 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          {/* Legal strip. */}
+          <div className="mt-12 border-t border-border/60 pt-6">
             <span className="text-sm text-muted-foreground">© {year} Clustrail</span>
-            <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="relative flex size-1.5" aria-hidden>
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-60" />
-                <span className="relative inline-flex size-1.5 rounded-full bg-live" />
-              </span>
-              All systems operational
-            </span>
           </div>
         </div>
       </div>
