@@ -8,7 +8,9 @@
  * reduced-motion viewers get a static block of rows instead. Decorative
  * (aria-hidden), but the header carries a real live status label.
  *
- * The terminal is intentionally dark in BOTH themes - a terminal is a terminal.
+ * The card follows the site theme: token-driven surfaces and text, with the
+ * verb colors drawn from the same adaptive palette (--live, --link,
+ * --destructive) so both themes keep AA contrast.
  */
 import {useEffect, useRef, useState, type ReactNode} from 'react';
 import clsx from 'clsx';
@@ -19,8 +21,8 @@ type Delta = {verb: Verb; object: string; note: string};
 
 const VERB_COLOR: Record<Verb, string> = {
   ADDED: 'text-live',
-  MODIFIED: 'text-[#85a8f1]',
-  DELETED: 'text-[#e0526e]',
+  MODIFIED: 'text-link',
+  DELETED: 'text-destructive',
 };
 
 // Realistic deltas across the product's demo namespaces.
@@ -53,8 +55,8 @@ function Row({d, dim}: {d: Delta; dim: boolean}): ReactNode {
         dim ? 'opacity-70' : 'opacity-100',
       )}>
       <span className={clsx('w-[4.75rem] shrink-0', VERB_COLOR[d.verb])}>{d.verb}</span>
-      <span className="truncate text-white/90">{d.object}</span>
-      <span className="hidden truncate text-white/45 sm:inline">{d.note}</span>
+      <span className="truncate text-foreground/90">{d.object}</span>
+      <span className="hidden truncate text-muted-foreground sm:inline">{d.note}</span>
     </li>
   );
 }
@@ -89,14 +91,14 @@ export default function WatchStream({className}: {className?: string}): ReactNod
       ref={ref}
       aria-hidden
       className={clsx(
-        'flex select-none flex-col overflow-hidden rounded-xl border border-border bg-[oklch(0.145_0_0)]',
+        'flex select-none flex-col overflow-hidden rounded-xl border border-border bg-card',
         className,
       )}>
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
-        <span className="font-mono text-xs text-white/50">ws://localhost:8080/ws</span>
+      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+        <span className="font-mono text-xs text-muted-foreground">ws://localhost:8080/ws</span>
         {/* The terminal keeps its own mono status vocabulary - it is the one
             place the data plane speaks for itself. */}
-        <span className="inline-flex items-center gap-2 font-mono text-2xs font-medium uppercase tracking-[0.18em] text-white/70">
+        <span className="inline-flex items-center gap-2 font-mono text-2xs font-medium uppercase tracking-[0.18em] text-foreground/70">
           <span className="relative flex size-1.5" aria-hidden>
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-60" />
             <span className="relative inline-flex size-1.5 rounded-full bg-live" />
@@ -112,7 +114,7 @@ export default function WatchStream({className}: {className?: string}): ReactNod
           <span className="text-live">$</span>
           <span
             aria-hidden
-            className="inline-block h-[1.05em] w-[0.5ch] translate-y-[0.12em] animate-caret bg-white/70"
+            className="inline-block h-[1.05em] w-[0.5ch] translate-y-[0.12em] animate-caret bg-foreground/70"
           />
         </li>
       </ul>
