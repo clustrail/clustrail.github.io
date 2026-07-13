@@ -1,36 +1,51 @@
 'use client';
 
 /*
- * ArchitectureDiagram: the site's centerpiece, now a 3D isometric instrument.
+ * ArchitectureDiagram: an isometric "platform with buildings" scene built from
+ * real extruded CSS boxes (the ctrlb technique).
  *
- * Four PLANES float in an isometric stack (rotateX(55deg) rotateZ(-45deg)),
- * separated along their shared normal (translateZ). The browser SPA is the TOP
- * plane, your clusters the BOTTOM: delta packets RISE through the stack, which
- * is exactly the story - deltas rise to the user, no polling.
+ * ONE tilted canvas: a fixed 640x460 div with transform-style: preserve-3d and
+ * transform: rotateX(50deg) rotateZ(35deg), inside a perspective container,
+ * scaled responsively by measuring the wrapper (transform: scale on a fixed
+ * stage, so all 3D coordinates stay in one authored space).
  *
- * Two layers make it up:
- *   1. The 3D stack (preserve-3d): the planes and their tier labels. Labels are
- *      counter-rotated (rotateZ(45) rotateX(-55)) so they billboard flat to the
- *      camera - text never skews - while still lifted by the same translateZ as
- *      their plane, so each label tracks its plane exactly at any depth.
- *   2. A flat conduit overlay on TOP of the stack: the glowing data beam, the
- *      rising packets, and the connector captions. Kept out of the preserve-3d
- *      z-sort so it always paints in front of every plane (packets read as
- *      rising through the ports), and stays crisp with no skew.
+ * Every component is a TRUE extruded box, hand-built from three faces: an
+ * absolutely positioned top-face div plus two wall divs - the front wall
+ * (width W, height DEPTH, transform-origin top, rotateX(-90deg)) hanging from
+ * the top face's bottom edge, and the right wall (width DEPTH, height H,
+ * transform-origin left, rotateY(90deg)) hanging from its right edge. Walls
+ * carry a translucent black overlay so shading works in both themes.
  *
- * Below md the isometric scene needs more width than a phone has, so it falls
- * back (via pure CSS md: breakpoints, no JS branch) to the original flat
- * vertical stack, which stays legible at 375px. Only one of the two is ever in
- * the accessibility tree (display:none hides the other).
+ * Composition maps clustrail's real data plane:
+ *   - BASE PLATFORM (the biggest slab): the Go gateway, one static binary.
+ *   - ON it, four extruded internals: MULTIPLEXER, INFORMER CACHE (larger),
+ *     SWR MEMOIZERS, AUTH PROXY.
+ *   - FLOATING ABOVE at z=190: the BROWSER SPA slab with NORMALIZED STORE and
+ *     VIRTUALIZED TABLE micro-boxes on top.
+ *   - OFF the platform's far-left flank at ground level: three apiserver
+ *     chips (cluster-a/b/c).
+ *   - The hero beam (multiplexer -> browser slab) stands up via
+ *     rotateX(90deg) with transform-origin top and grows from height 0 on
+ *     entrance; packets are bright segments running along its height. Flat
+ *     glowing traces carry watch (apiservers -> cache) and snapshots + deltas
+ *     (cache -> multiplexer).
  *
- * Client island for: the in-view gate (loops pause off-screen), reduced-motion
- * handling (no float, no parallax, no assemble, static dashed beam, no
- * packets), pointer parallax, first-in-view assemble, and tier selection
- * (hover/focus/click swaps the adjacent aria-live explainer).
+ * Labels live ON the top faces (mono uppercase, tilted with the canvas - the
+ * legible ctrlb look); beam labels are counter-rotated billboards
+ * (rotateZ(-35deg) rotateX(-50deg)) so they face the camera.
+ *
+ * Interaction: four focusable tier buttons (browser slab, platform, cache
+ * box, an invisible flat hit area over the apiserver column) drive the
+ * aria-live explainer below the scene; the gateway's internal boxes hover-
+ * select the gateway tier. Below md the 3D canvas hides (aria-hidden there is
+ * moot - it is display:none) and a flat stacked tier-button list takes over.
+ *
+ * Reduced motion renders everything settled (no rise, beams at full height,
+ * no packets); off-viewport pauses the packet loops.
  */
 
-import {useEffect, useRef, useState, Fragment} from 'react';
-import type {ReactNode, CSSProperties} from 'react';
+import {useEffect, useRef, useState} from 'react';
+import type {CSSProperties, ReactNode} from 'react';
 import clsx from 'clsx';
 import {useInView} from '@/lib/use-in-view';
 
@@ -39,15 +54,13 @@ type Variant = 'landing' | 'full';
 interface Tier {
   id: string;
   name: string;
-  /** A quiet trailing qualifier on the tier name, e.g. "one static binary". */
   tag?: string;
   annotations: string[];
-  /** The product tier gets a faint primary ring. */
   emphasized?: boolean;
   blurb: string;
 }
 
-/* Top-to-bottom: browser down to clusters. Packets travel the other way. */
+/* The four tiers of the explainer, top of the stack to the clusters. */
 const TIERS: Tier[] = [
   {
     id: 'browser',
@@ -60,7 +73,7 @@ const TIERS: Tier[] = [
     id: 'gateway',
     name: 'Go gateway',
     tag: 'one static binary',
-    annotations: ['embedded SPA', 'authenticating proxy'],
+    annotations: ['embedded SPA', 'authenticating proxy', 'one /ws'],
     emphasized: true,
     blurb:
       'One Go binary with the React SPA embedded via go:embed. It serves the UI and acts as an authenticating reverse proxy, multiplexing every list and detail view over a single WebSocket. It never holds privileges beyond your own per-cluster credentials.',
@@ -81,72 +94,170 @@ const TIERS: Tier[] = [
   },
 ];
 
-/* Connector labels, one between each pair, read top-to-bottom. The flow they
-   carry runs upward (clusters -> browser). */
-const CONNECTORS = [
-  'one multiplexed WebSocket - deltas only',
-  'snapshots + deltas',
-  'watch (client-go shared informers)',
+/* ---- authored 3D geometry (all coordinates in one 640x460 canvas space) ----
+ * The canvas is tilted rotateX(50deg) rotateZ(35deg). Altitudes are translateZ
+ * in px. Everything below is a module constant: nothing is computed per frame.
+ */
+const CANVAS_W = 640;
+const CANVAS_H = 460;
+/** The fixed stage the tilted scene renders into; scaled to fit the wrapper. */
+const STAGE_W = 830;
+const STAGE_H = 560;
+const CANVAS_LEFT = (STAGE_W - CANVAS_W) / 2;
+const CANVAS_TOP = 82;
+const TILT = 'rotateX(50deg) rotateZ(35deg)';
+
+/* The scene renders orthographically (no perspective property), so this
+ * projection of a canvas-space point (x, y, altitude z) to stage-space screen
+ * coordinates is EXACT - it is how the caption overlay is pinned to beams and
+ * traces without ever fighting 3D occlusion. Computed at authoring time. */
+const COS35 = Math.cos((35 * Math.PI) / 180);
+const SIN35 = Math.sin((35 * Math.PI) / 180);
+const COS50 = Math.cos((50 * Math.PI) / 180);
+const SIN50 = Math.sin((50 * Math.PI) / 180);
+function proj(x: number, y: number, z: number): {x: number; y: number} {
+  const lx = x - CANVAS_W / 2;
+  const ly = y - CANVAS_H / 2;
+  const rx = lx * COS35 - ly * SIN35;
+  const ry = lx * SIN35 + ly * COS35;
+  return {
+    x: Math.round((CANVAS_LEFT + CANVAS_W / 2 + rx) * 10) / 10,
+    y: Math.round((CANVAS_TOP + CANVAS_H / 2 + ry * COS50 - z * SIN50) * 10) / 10,
+  };
+}
+
+interface BoxGeom {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** Altitude of the box underside. */
+  base: number;
+  depth: number;
+}
+
+/** The Go gateway: the base platform. Top face at z=30. */
+const PLATFORM: BoxGeom = {x: 90, y: 90, w: 500, h: 360, base: 0, depth: 30};
+
+/** Gateway internals standing on the platform (base = platform top). */
+const CACHE: BoxGeom = {x: 130, y: 130, w: 190, h: 115, base: 30, depth: 30};
+const MUX: BoxGeom = {x: 370, y: 130, w: 170, h: 115, base: 30, depth: 30};
+const AUTH: BoxGeom = {x: 150, y: 290, w: 140, h: 100, base: 30, depth: 26};
+const SWR: BoxGeom = {x: 370, y: 290, w: 140, h: 100, base: 30, depth: 26};
+
+/** The browser SPA slab floating above the multiplexer (pushed toward the
+ *  far edge so it never crowds the multiplexer's face). */
+const SLAB: BoxGeom = {x: 300, y: 12, w: 290, h: 195, base: 166, depth: 24};
+const STORE: BoxGeom = {x: 318, y: 32, w: 118, h: 66, base: 190, depth: 16};
+const VTABLE: BoxGeom = {x: 448, y: 112, w: 126, h: 66, base: 190, depth: 16};
+
+/** Apiserver chips: a column off the platform's far-left flank, on the
+ *  ground, extruded to the platform's height so the watch traces run flat. */
+const CHIP_W = 120;
+const CHIP_H = 54;
+const CHIPS: BoxGeom[] = [150, 270, 390].map((cy) => ({
+  x: -40,
+  y: cy - CHIP_H / 2,
+  w: CHIP_W,
+  h: CHIP_H,
+  base: 0,
+  depth: 30,
+}));
+const CHIP_NAMES = ['cluster-a', 'cluster-b', 'cluster-c'];
+
+/** The hero beam: multiplexer top center up toward the slab underside.
+ *  Its top altitude is authored so the beam's projected top edge lands
+ *  EXACTLY on the slab front wall's projected bottom edge at the beam's
+ *  screen x - the beam reads as vanishing under the slab without relying on
+ *  browser plane splitting (which drops overflow-clipped elements). */
+const BEAM = (() => {
+  const x = MUX.x + MUX.w / 2; // 455
+  const y = MUX.y + MUX.h / 2; // 187.5
+  const z0 = MUX.base + MUX.depth; // 60
+  // Slab front wall bottom edge, projected.
+  const p1 = proj(SLAB.x, SLAB.y + SLAB.h, SLAB.base);
+  const p2 = proj(SLAB.x + SLAB.w, SLAB.y + SLAB.h, SLAB.base);
+  const at = proj(x, y, 0);
+  const t = (at.x - p1.x) / (p2.x - p1.x);
+  const edgeY = p1.y + t * (p2.y - p1.y);
+  const zTop = (at.y - edgeY) / SIN50; // screen-flush with the wall edge
+  return {x, y, z0, h: Math.round(zTop - z0)};
+})();
+
+/** Flat glowing traces (lying in-plane at a given altitude). */
+interface TraceGeom {
+  x: number;
+  y: number;
+  len: number;
+  angle: number;
+  z: number;
+}
+function trace(x1: number, y1: number, x2: number, y2: number, z: number): TraceGeom {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  return {
+    x: x1,
+    y: y1,
+    len: Math.round(Math.hypot(dx, dy) * 100) / 100,
+    angle: Math.round((Math.atan2(dy, dx) * 180) / Math.PI * 100) / 100,
+  z};
+}
+/** watch: each apiserver chip fans into the informer cache's left edge. */
+const WATCH_TRACES: TraceGeom[] = [
+  trace(78, 150, CACHE.x, 165, 31),
+  trace(78, 270, CACHE.x, 190, 31),
+  trace(78, 390, CACHE.x, 215, 31),
 ];
+/** snapshots + deltas: cache top -> multiplexer top. */
+const SHORT_TRACE: TraceGeom = trace(CACHE.x + CACHE.w, 187.5, MUX.x, 187.5, 60);
 
-/* ---- isometric geometry ---------------------------------------------------
- * ISO_X/ISO_Z: the classic isometric orientation of the whole stack.
- * A billboarded child undoes it with rotateZ(-ISO_Z) rotateX(-ISO_X).
- * PROJ: how a unit of translateZ projects onto the screen's vertical axis
- * (sin of the tilt), used to place the flat conduit overlay to match the 3D
- * planes' on-screen heights. HALF_DIAG: a diamond's screen half-width as a
- * fraction of the pre-rotation side. */
-const ISO_X = 55;
-const ISO_Z = -45;
-const PROJ = Math.sin((ISO_X * Math.PI) / 180);
-const HALF_DIAG = 0.7071;
-
-interface IsoConfig {
-  /** Perspective distance on the scene. */
-  perspective: number;
-  /** Scene box height in px (the planes float within it). */
-  sceneH: number;
-  /** Pre-rotation square side of each plane. */
-  side: number;
-  /** translateZ between adjacent planes. */
-  step: number;
-  /** Horizontal position of the stack's pierce-line inside the scene. */
-  originX: string;
-  /** Extra gap between a plane's right vertex and its label. */
-  gap: number;
-  /** Leader hairline length from that vertex to the label block. */
-  leader: number;
-  /** Fixed width of every label block, so boxes read uniform and the
-   *  annotation line wraps at a set width instead of shrink-wrapping to
-   *  min-content inside the zero-width 3D anchor. */
-  labelW: number;
-  /** Max parallax tilt (deg) added to the isometric rotation on pointer move. */
-  tilt: number;
+/** Flow captions: 2D overlay text pinned at exact projected coordinates
+ *  (stage space), so they stay crisp and are never occluded by the boxes. */
+interface Caption {
+  lines: string[];
+  /** Projected anchor. */
+  at: {x: number; y: number};
+  dx: number;
+  dy: number;
+  align: 'left' | 'right';
 }
+const CAPTIONS: Caption[] = [
+  {
+    lines: ['watch'],
+    at: proj(104, 230, 31), // middle watch trace, midpoint
+    dx: -10,
+    dy: 12,
+    align: 'right',
+  },
+  {
+    lines: ['snapshots + deltas'],
+    at: proj(345, 187.5, 60), // the cache -> multiplexer bridge, midpoint
+    dx: -12,
+    dy: 14,
+    align: 'right',
+  },
+  {
+    lines: ['one WebSocket', 'deltas only'],
+    at: proj(BEAM.x, BEAM.y, BEAM.z0 + BEAM.h / 2), // hero beam, mid-height
+    dx: 22,
+    dy: -2,
+    align: 'left',
+  },
+];
+/** Overlay heading for the apiserver column. */
+const CHIP_HEADING = proj(20, 112, 30);
 
-const CONFIG: Record<Variant, IsoConfig> = {
-  landing: {perspective: 1200, sceneH: 360, side: 124, step: 98, originX: '36%', gap: 30, leader: 22, labelW: 244, tilt: 5},
-  full: {perspective: 1350, sceneH: 440, side: 152, step: 116, originX: '31%', gap: 34, leader: 26, labelW: 250, tilt: 6},
-};
-
-const PACKET_COUNT = 4;
-
-/** z of a tier's plane, centered so the stack pivots about its middle. */
-function tierZ(index: number, step: number): number {
-  return ((TIERS.length - 1) / 2 - index) * step;
-}
-
-/** On-screen vertical offset (px, up is negative) of a translateZ level,
- *  used to line the flat conduit overlay up with the 3D planes. */
-function screenY(z: number): number {
-  return -z * PROJ;
-}
-
-/** Billboards a child (undoes the stack rotation) after lifting it to z, so
- *  labels face the camera unskewed. */
-function billboard(z: number): string {
-  return `translateZ(${z}px) rotateZ(${-ISO_Z}deg) rotateX(${-ISO_X}deg)`;
-}
+/* ---- theme-token paints ----------------------------------------------------
+ * Top faces are the card surface nudged toward foreground so they read on the
+ * near-white light canvas too; walls reuse the face fill under a translucent
+ * black overlay, which shades correctly in both themes.
+ */
+const FACE_PLATFORM = 'color-mix(in oklch, var(--card), var(--foreground) 4%)';
+const FACE_BOX = 'color-mix(in oklch, var(--card), var(--foreground) 7%)';
+const FACE_CHIP = 'color-mix(in oklch, var(--card), var(--foreground) 5%)';
+const EDGE = 'var(--border)';
+const EDGE_ACCENT = 'color-mix(in oklch, var(--primary), transparent 45%)';
+const GLOW = '0 0 22px color-mix(in oklch, var(--primary), transparent 55%)';
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
@@ -160,486 +271,739 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-/* ---- scene-scoped keyframes ------------------------------------------------
- * Injected per variant with unique names so the two variants' packet runs
- * (which differ in travel distance) never collide. Plain <style> is fine in a
- * client island and survives static export. */
-function sceneCss(variant: Variant, half: number): string {
-  const rise = `iso-rise-${variant}`;
+/** Scale the fixed stage to the wrapper width (never above 1: upscaled
+ *  transforms blur text). */
+function useFitScale(ref: React.RefObject<HTMLDivElement | null>): number {
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      setScale(Math.min(1, el.clientWidth / STAGE_W));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  return scale;
+}
+
+/* ---- scene-scoped keyframes (unique per variant) --------------------------- */
+function sceneCss(v: Variant): string {
   return `
-@keyframes ${rise} {
-  0%   { transform: translate(-50%, -50%) translateY(${half}px); opacity: 0; }
+@keyframes arch3d-rise-${v} {
+  0%   { transform: translateY(0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(var(--rise)); opacity: 0; }
+}
+@keyframes arch3d-run-${v} {
+  0%   { transform: translateX(0); opacity: 0; }
   12%  { opacity: 1; }
   88%  { opacity: 1; }
-  100% { transform: translate(-50%, -50%) translateY(${-half}px); opacity: 0; }
+  100% { transform: translateX(var(--travel)); opacity: 0; }
 }
-@keyframes iso-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+@keyframes arch3d-dot-${v} {
+  0%, 100% { opacity: 0.5; box-shadow: 0 0 0 0 color-mix(in oklch, var(--live), transparent 60%); }
+  50%      { opacity: 1;   box-shadow: 0 0 6px 1px color-mix(in oklch, var(--live), transparent 60%); }
 }`;
 }
 
-/* ---- one isometric plane --------------------------------------------------- */
-function Plane({
-  tier,
-  index,
-  cfg,
-  selected,
+/* ---- one extruded box: top face + front wall + right wall ------------------ */
+function Extruded({
+  geom,
+  fill,
+  edge,
+  glow,
+  frontShade,
+  rightShade,
+  entrance,
+  topClassName,
+  children,
+  interact,
+}: {
+  geom: BoxGeom;
+  fill: string;
+  edge: string;
+  glow?: boolean;
+  frontShade: number;
+  rightShade: number;
+  entrance: CSSProperties;
+  topClassName?: string;
+  children?: ReactNode;
+  /** Pointer-hover selection for non-focusable internals. */
+  interact?: {onSelect: () => void};
+}): ReactNode {
+  const wall = (style: CSSProperties, shade: number): ReactNode => (
+    <div
+      aria-hidden
+      style={{
+        position: 'absolute',
+        background: fill,
+        backfaceVisibility: 'hidden',
+        border: `1px solid ${edge}`,
+        pointerEvents: 'none',
+        ...style,
+      }}>
+      <div style={{position: 'absolute', inset: 0, background: '#000', opacity: shade}} />
+    </div>
+  );
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: geom.x,
+        top: geom.y,
+        width: geom.w,
+        height: geom.h,
+        transformStyle: 'preserve-3d',
+        ...entrance,
+      }}>
+      {/* Top face. */}
+      <div
+        onMouseEnter={interact?.onSelect}
+        onClick={interact?.onSelect}
+        className={topClassName}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: fill,
+          border: `1px solid ${edge}`,
+          borderRadius: 3,
+          boxShadow: glow ? GLOW : undefined,
+          transition: 'box-shadow 200ms ease-out, border-color 200ms ease-out',
+        }}>
+        {children}
+      </div>
+      {/* Front wall: hangs from the top face's bottom edge down to the base. */}
+      {wall(
+        {
+          left: 0,
+          top: '100%',
+          width: geom.w,
+          height: geom.depth,
+          transformOrigin: 'top',
+          transform: 'rotateX(-90deg)',
+        },
+        frontShade,
+      )}
+      {/* Right wall: hangs from the right edge down to the base. */}
+      {wall(
+        {
+          left: '100%',
+          top: 0,
+          width: geom.depth,
+          height: geom.h,
+          transformOrigin: 'left',
+          transform: 'rotateY(90deg)',
+        },
+        rightShade,
+      )}
+    </div>
+  );
+}
+
+/** Entrance for a box group: rests at translateZ(base+depth); rises in. */
+function entranceStyle(geom: BoxGeom, settled: boolean, delay: number): CSSProperties {
+  const z = geom.base + geom.depth;
+  return {
+    transform: settled ? `translateZ(${z}px)` : `translateZ(${z - 26}px)`,
+    opacity: settled ? 1 : 0,
+    transition:
+      'transform 650ms cubic-bezier(0.16, 1, 0.3, 1), opacity 650ms ease-out',
+    transitionDelay: `${delay}ms`,
+  };
+}
+
+/** A mono uppercase label sitting flat on a top face (tilts with the canvas). */
+function FaceLabel({
+  title,
+  sub,
+  className,
+}: {
+  title: string;
+  sub?: string;
+  className?: string;
+}): ReactNode {
+  return (
+    <div className={clsx('pointer-events-none absolute', className)}>
+      <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground">
+        {title}
+      </div>
+      {sub && (
+        <div className="mt-0.5 font-mono text-[8.5px] leading-tight text-muted-foreground">
+          {sub}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A flat glowing trace lying in-plane, with one packet running along it. */
+function Trace({
+  geom,
+  variant,
   settled,
   animate,
-  onSelect,
+  reduced,
+  delaySec,
 }: {
-  tier: Tier;
-  index: number;
-  cfg: IsoConfig;
-  selected: boolean;
+  geom: TraceGeom;
+  variant: Variant;
   settled: boolean;
   animate: boolean;
-  onSelect: () => void;
+  reduced: boolean;
+  delaySec: number;
 }): ReactNode {
-  const z = tierZ(index, cfg.step);
   return (
     <div
       aria-hidden
-      className={clsx(
-        'absolute left-1/2 top-1/2 rounded-xl border bg-card/85 bg-dotgrid',
-        'transition-[transform,opacity] duration-500 ease-out',
-        'shadow-[0_18px_30px_-14px_rgba(0,0,0,0.5)]',
-        tier.emphasized ? 'ring-1 ring-primary/40' : '',
-        selected ? 'border-primary/60' : 'border-border',
-      )}
       style={{
-        width: cfg.side,
-        height: cfg.side,
-        // Assemble: collapse to the mid-plane at opacity 0, then settle to z,
-        // staggered top-to-bottom. Reduced motion renders settled instantly.
-        transform: `translate(-50%, -50%) translateZ(${settled ? z : 0}px)`,
+        position: 'absolute',
+        left: geom.x,
+        top: geom.y - 3,
+        width: geom.len,
+        height: 6,
+        borderRadius: 3,
+        transformOrigin: '0 50%',
+        transform: `translateZ(${geom.z}px) rotateZ(${geom.angle}deg)`,
+        background:
+          'linear-gradient(to right, color-mix(in oklch, var(--primary), transparent 60%), color-mix(in oklch, var(--primary), transparent 28%))',
+        boxShadow: '0 0 10px color-mix(in oklch, var(--primary), transparent 65%)',
+        overflow: 'hidden',
         opacity: settled ? 1 : 0,
-        transitionDelay: settled ? `${index * 90}ms` : '0ms',
-        transformStyle: 'preserve-3d',
-      }}
-      onClick={onSelect}>
-      {/* The port where the data beam pierces the plane (skews to an ellipse -
-          reads as a grommet, which is the intent). */}
-      <span
-        className={clsx(
-          'absolute left-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border',
-          selected ? 'border-primary/50' : 'border-border',
-        )}
-      />
-      {/* Hairline glow pulse as packets land, kept on this overlay so it never
-          fights the emphasized plane's ring. */}
-      {animate && (
-        <span
-          className="pointer-events-none absolute inset-0 rounded-xl animate-tier-pulse"
-          style={{animationDelay: `${index * 650}ms`}}
+        transition: 'opacity 500ms ease-out 900ms',
+        pointerEvents: 'none',
+      }}>
+      {!reduced && (
+        <div
+          style={
+            {
+              position: 'absolute',
+              left: -16,
+              top: 0,
+              width: 16,
+              height: 6,
+              borderRadius: 3,
+              background: 'color-mix(in oklch, var(--primary), white 40%)',
+              boxShadow: '0 0 8px color-mix(in oklch, var(--primary), transparent 30%)',
+              '--travel': `${geom.len + 32}px`,
+              animation: `arch3d-run-${variant} 2.4s ease-in-out infinite`,
+              animationDelay: `${delaySec}s`,
+              animationPlayState: animate ? 'running' : 'paused',
+            } as CSSProperties
+          }
         />
       )}
     </div>
   );
 }
 
-/* ---- a tier's flat label block, billboarded beside its plane -------------- */
-function TierLabel({
+/* ---- tier button (mobile stacked list) ------------------------------------- */
+function TierButton({
   tier,
-  index,
-  cfg,
   selected,
   onSelect,
+  className,
 }: {
   tier: Tier;
-  index: number;
-  cfg: IsoConfig;
   selected: boolean;
   onSelect: () => void;
+  className?: string;
 }): ReactNode {
-  const z = tierZ(index, cfg.step);
-  const start = (cfg.side / 2) * HALF_DIAG + cfg.gap; // right of the diamond's vertex.
   return (
-    <div
-      className="absolute left-1/2 top-1/2 h-0 w-0"
-      style={{transform: billboard(z), transformStyle: 'preserve-3d'}}>
-      <div
-        className="flex items-center"
-        style={{transform: `translate(${start}px, -50%)`}}>
-        <span
-          aria-hidden
-          className={clsx('h-px shrink-0', selected ? 'bg-primary/60' : 'bg-border')}
-          style={{width: cfg.leader}}
-        />
-        <button
-          type="button"
-          onMouseEnter={onSelect}
-          onFocus={onSelect}
-          onClick={onSelect}
-          aria-pressed={selected}
-          style={{width: cfg.labelW}}
-          className={clsx(
-            'group/tier ml-2 shrink-0 rounded-lg border bg-card px-3 py-2 text-left transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
-            tier.emphasized && 'ring-1 ring-primary/30',
-            selected ? 'border-primary/50' : 'border-border hover:border-primary/40',
-          )}>
-          <span className="flex flex-wrap items-baseline gap-x-2">
-            <span className="whitespace-nowrap font-mono text-sm font-medium text-foreground">
-              {tier.name}
-            </span>
-            {tier.tag && (
-              <span className="font-mono text-2xs text-muted-foreground">- {tier.tag}</span>
-            )}
-          </span>
-          <span className="mt-0.5 block font-mono text-2xs leading-relaxed text-muted-foreground">
-            {tier.annotations.join('  ·  ')}
-          </span>
-        </button>
-      </div>
-    </div>
+    <button
+      type="button"
+      onMouseEnter={onSelect}
+      onFocus={onSelect}
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={clsx(
+        'rounded-lg border bg-card px-3 py-2 text-left transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+        tier.emphasized && 'ring-1 ring-primary/30',
+        selected ? 'border-primary/50' : 'border-border hover:border-primary/40',
+        className,
+      )}>
+      <span className="flex items-baseline gap-2 overflow-hidden">
+        <span className="whitespace-nowrap font-mono text-[13px] font-medium text-foreground">
+          {tier.name}
+        </span>
+        {tier.tag && (
+          <span className="truncate font-mono text-2xs text-muted-foreground">{tier.tag}</span>
+        )}
+      </span>
+      <span className="mt-0.5 block truncate font-mono text-2xs text-muted-foreground">
+        {tier.annotations.join(' · ')}
+      </span>
+    </button>
   );
 }
 
-/* ---- the flat conduit overlay: beam, packets, connector captions ----------
- * Sits above the 3D stack, centered on the pierce-line, so it always paints in
- * front of the planes and stays crisp. Its vertical extent is derived from the
- * same projection the planes use, so the beam spans browser-to-clusters. */
-function Conduit({
-  variant,
-  cfg,
-  animate,
-  reduced,
+function Explainer({
+  tier,
+  compact,
+  className,
 }: {
-  variant: Variant;
-  cfg: IsoConfig;
-  animate: boolean;
-  reduced: boolean;
+  tier: Tier;
+  compact?: boolean;
+  className?: string;
 }): ReactNode {
-  // Half the on-screen distance from the top plane's centre to the bottom's.
-  const half = ((TIERS.length - 1) / 2) * cfg.step * PROJ;
-  const beamH = 2 * half + cfg.side * 0.32;
-
-  return (
-    <div
-      className="pointer-events-none absolute inset-y-0"
-      style={{left: cfg.originX, transform: 'translateX(-0.5px)'}}
-      aria-hidden>
-      <style>{sceneCss(variant, half)}</style>
-
-      {/* Connector captions, right-aligned to the left of the beam at the
-          midpoint between each pair of planes. */}
-      {CONNECTORS.map((label, i) => {
-        const midZ = (tierZ(i, cfg.step) + tierZ(i + 1, cfg.step)) / 2;
-        return (
-          <div
-            key={label}
-            className="absolute left-0 top-1/2 flex w-44 items-center justify-end text-right"
-            style={{transform: `translate(-100%, calc(-50% + ${screenY(midZ)}px))`}}>
-            <span className="font-mono text-2xs leading-tight text-muted-foreground">{label}</span>
-            <span className="ml-2 h-px w-4 shrink-0 bg-border" />
-          </div>
-        );
-      })}
-
-      {reduced ? (
-        // Static dashed conduit, no glow: the calm reduced-motion reading.
-        <div
-          className="absolute left-0 top-1/2 w-0 -translate-y-1/2 border-l border-dashed border-border"
-          style={{height: beamH}}
-        />
-      ) : (
-        <>
-          {/* Soft halo. */}
-          <div
-            className="absolute left-0 top-1/2 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full blur-md"
-            style={{
-              height: beamH,
-              background:
-                'linear-gradient(to top, transparent, color-mix(in oklch, var(--primary), transparent 55%) 20%, color-mix(in oklch, var(--primary), transparent 55%) 80%, transparent)',
-            }}
-          />
-          {/* Crisp core. */}
-          <div
-            className="absolute left-0 top-1/2 w-px -translate-x-1/2 -translate-y-1/2 rounded-full blur-[0.4px]"
-            style={{
-              height: beamH,
-              background:
-                'linear-gradient(to top, transparent, var(--primary) 18%, color-mix(in oklch, var(--primary), white 35%) 50%, var(--primary) 82%, transparent)',
-            }}
-          />
-          {/* Rising delta packets. */}
-          {Array.from({length: PACKET_COUNT}).map((_, n) => (
-            <span
-              key={n}
-              className="absolute left-0 top-1/2 size-[7px] rounded-full bg-primary shadow-[0_0_8px_1px] shadow-primary/70"
-              style={{
-                animationName: `iso-rise-${variant}`,
-                animationDuration: '3.4s',
-                animationTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
-                animationIterationCount: 'infinite',
-                animationDelay: `${(n * 3.4) / PACKET_COUNT}s`,
-                animationPlayState: animate ? 'running' : 'paused',
-                opacity: 0,
-              }}
-            />
-          ))}
-        </>
-      )}
-    </div>
-  );
-}
-
-/* ---- the isometric scene (md and up) -------------------------------------- */
-function IsoScene({
-  variant,
-  selectedId,
-  onSelect,
-  animate,
-  reduced,
-  settled,
-}: {
-  variant: Variant;
-  selectedId: string;
-  onSelect: (id: string) => void;
-  animate: boolean;
-  reduced: boolean;
-  settled: boolean;
-}): ReactNode {
-  const cfg = CONFIG[variant];
-  const stackRef = useRef<HTMLDivElement>(null);
-
-  // Pointer parallax: a few degrees of extra tilt, smoothed and reset by the
-  // stack's own transition. Skipped entirely under reduced motion.
-  function onMove(e: React.MouseEvent<HTMLDivElement>): void {
-    if (reduced) return;
-    const el = stackRef.current;
-    if (!el) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    const nx = (e.clientX - r.left) / r.width - 0.5;
-    const ny = (e.clientY - r.top) / r.height - 0.5;
-    el.style.setProperty('--tx', `${(-ny * cfg.tilt).toFixed(2)}deg`);
-    el.style.setProperty('--tz', `${(nx * cfg.tilt).toFixed(2)}deg`);
-  }
-  function onLeave(): void {
-    const el = stackRef.current;
-    if (!el) return;
-    el.style.setProperty('--tx', '0deg');
-    el.style.setProperty('--tz', '0deg');
-  }
-
-  return (
-    <div
-      className={clsx('relative hidden select-none md:block', animate && 'is-floating')}
-      style={{perspective: `${cfg.perspective}px`, height: cfg.sceneH}}
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}>
-      <div
-        ref={stackRef}
-        className="absolute top-1/2"
-        style={{
-          left: cfg.originX,
-          transformStyle: 'preserve-3d',
-          transform: `rotateX(calc(${ISO_X}deg + var(--tx, 0deg))) rotateZ(calc(${ISO_Z}deg + var(--tz, 0deg)))`,
-          transition: 'transform 300ms ease-out',
-        }}>
-        {TIERS.map((tier, i) => (
-          <Plane
-            key={tier.id}
-            tier={tier}
-            index={i}
-            cfg={cfg}
-            selected={selectedId === tier.id}
-            settled={settled}
-            animate={animate}
-            onSelect={() => onSelect(tier.id)}
-          />
-        ))}
-        {TIERS.map((tier, i) => (
-          <TierLabel
-            key={tier.id}
-            tier={tier}
-            index={i}
-            cfg={cfg}
-            selected={selectedId === tier.id}
-            onSelect={() => onSelect(tier.id)}
-          />
-        ))}
-      </div>
-
-      <Conduit variant={variant} cfg={cfg} animate={animate} reduced={reduced} />
-
-      {/* iso-float lives on the scene (screen space) so it never fights the
-          stack's rotation/parallax transform. */}
-      <style>{`.is-floating { animation: iso-float 7s ease-in-out infinite; }`}</style>
-    </div>
-  );
-}
-
-/* ---- flat fallback (below md): the original vertical stack ---------------- */
-const FLAT_CONNECTOR_H = 52;
-const FLAT_LINE_X = 12;
-const FLAT_PACKETS = 3;
-const FLAT_STAGGER_MS = 860;
-
-function FlatStack({
-  selectedId,
-  onSelect,
-  animate,
-  reduced,
-}: {
-  selectedId: string;
-  onSelect: (id: string) => void;
-  animate: boolean;
-  reduced: boolean;
-}): ReactNode {
-  return (
-    <div className="mx-auto flex max-w-md flex-col md:hidden">
-      {TIERS.map((tier, i) => {
-        const selected = selectedId === tier.id;
-        return (
-          <Fragment key={tier.id}>
-            <button
-              type="button"
-              onMouseEnter={() => onSelect(tier.id)}
-              onFocus={() => onSelect(tier.id)}
-              onClick={() => onSelect(tier.id)}
-              aria-pressed={selected}
-              className={clsx(
-                'group/tier relative w-full rounded-lg border bg-card px-4 py-3 text-left transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
-                tier.emphasized && 'ring-1 ring-primary/30',
-                selected ? 'border-primary/50' : 'border-border hover:border-primary/40',
-              )}>
-              {animate && (
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 rounded-lg animate-tier-pulse"
-                  style={{animationDelay: `${i * (FLAT_STAGGER_MS / 2)}ms`}}
-                />
-              )}
-              <span className="flex flex-wrap items-baseline gap-x-2">
-                <span className="font-mono text-sm font-medium text-foreground">{tier.name}</span>
-                {tier.tag && (
-                  <span className="font-mono text-2xs text-muted-foreground">- {tier.tag}</span>
-                )}
-              </span>
-              <span className="mt-1 block font-mono text-2xs leading-relaxed text-muted-foreground">
-                {tier.annotations.join('  ·  ')}
-              </span>
-            </button>
-            {i < TIERS.length - 1 && (
-              <div
-                className="flex items-stretch gap-3"
-                style={{height: FLAT_CONNECTOR_H}}
-                aria-hidden>
-                <div className="relative w-6 shrink-0">
-                  <div
-                    className={clsx(
-                      'absolute inset-y-0 left-1/2 -translate-x-1/2',
-                      reduced ? 'border-l border-dashed border-border' : 'w-px bg-border',
-                    )}
-                  />
-                  {!reduced &&
-                    Array.from({length: FLAT_PACKETS}).map((_, n) => (
-                      <span
-                        key={n}
-                        className="absolute left-0 top-0 size-1.5 rounded-full bg-primary shadow-[0_0_6px] shadow-primary/60 animate-packet"
-                        style={
-                          {
-                            offsetPath: `path('M ${FLAT_LINE_X} ${FLAT_CONNECTOR_H} L ${FLAT_LINE_X} 0')`,
-                            animationDelay: `${n * FLAT_STAGGER_MS}ms`,
-                            animationPlayState: animate ? 'running' : 'paused',
-                          } as CSSProperties
-                        }
-                      />
-                    ))}
-                </div>
-                <span className="self-center font-mono text-2xs text-muted-foreground">
-                  {CONNECTORS[i]}
-                </span>
-              </div>
-            )}
-          </Fragment>
-        );
-      })}
-    </div>
-  );
-}
-
-function Explainer({tier, className}: {tier: Tier; className?: string}): ReactNode {
   return (
     <div
       aria-live="polite"
-      className={clsx('rounded-lg border border-border bg-card/50 p-4 sm:p-5', className)}>
+      className={clsx(
+        'rounded-lg border border-border bg-card/50',
+        compact ? 'min-h-24 p-3 sm:p-4' : 'min-h-28 p-4 sm:min-h-24 sm:p-5',
+        className,
+      )}>
       <span className="font-mono text-2xs font-medium uppercase tracking-[0.16em] text-link">
         {tier.name}
       </span>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{tier.blurb}</p>
+      <p
+        className={clsx(
+          'mt-2 leading-relaxed text-muted-foreground',
+          compact ? 'text-[13px]' : 'text-sm',
+        )}>
+        {tier.blurb}
+      </p>
+    </div>
+  );
+}
+
+/* ---- the 3D scene ----------------------------------------------------------- */
+function Scene({
+  variant,
+  selectedId,
+  onSelect,
+  settled,
+  animate,
+  reduced,
+}: {
+  variant: Variant;
+  selectedId: string;
+  onSelect: (id: string) => void;
+  settled: boolean;
+  animate: boolean;
+  reduced: boolean;
+}): ReactNode {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const scale = useFitScale(wrapRef);
+  const grown = settled; // beams grow after boxes rise (via transition delay)
+  const selectGateway = (): void => onSelect('gateway');
+
+  /** Shared classes for the four real tier buttons (tilted top faces). */
+  const tierBtn = (id: string): string =>
+    clsx(
+      'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70',
+      selectedId === id && 'is-selected',
+    );
+
+  return (
+    <div ref={wrapRef} className="hidden w-full md:block" style={{height: STAGE_H * scale}}>
+      <div
+        style={{
+          width: STAGE_W,
+          height: STAGE_H,
+          margin: '0 auto',
+          transform: `scale(${scale})`,
+          transformOrigin: 'top center',
+        }}>
+        <div style={{position: 'absolute', inset: 0}}>
+          <div
+            style={{
+              position: 'absolute',
+              left: CANVAS_LEFT,
+              top: CANVAS_TOP,
+              width: CANVAS_W,
+              height: CANVAS_H,
+              transformStyle: 'preserve-3d',
+              transform: TILT,
+            }}>
+            {/* ---- base platform: the Go gateway ---- */}
+            <Extruded
+              geom={PLATFORM}
+              fill={FACE_PLATFORM}
+              edge={selectedId === 'gateway' ? EDGE_ACCENT : EDGE}
+              glow={selectedId === 'gateway'}
+              frontShade={0.2}
+              rightShade={0.34}
+              entrance={entranceStyle(PLATFORM, settled, 0)}
+              topClassName="bg-dotgrid">
+              <button
+                type="button"
+                aria-pressed={selectedId === 'gateway'}
+                onMouseEnter={selectGateway}
+                onFocus={selectGateway}
+                onClick={selectGateway}
+                className={clsx(
+                  'absolute inset-0 rounded-[3px] bg-transparent text-left',
+                  tierBtn('gateway'),
+                )}>
+                <span className="absolute bottom-3 left-4">
+                  <span className="block font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground">
+                    Go gateway
+                  </span>
+                  <span className="mt-0.5 block font-mono text-[9px] text-muted-foreground">
+                    one static binary · your credentials only
+                  </span>
+                </span>
+              </button>
+            </Extruded>
+
+            {/* ---- gateway internals ---- */}
+            <Extruded
+              geom={CACHE}
+              fill={FACE_BOX}
+              edge={selectedId === 'cache' ? EDGE_ACCENT : EDGE}
+              glow={selectedId === 'cache'}
+              frontShade={0.22}
+              rightShade={0.36}
+              entrance={entranceStyle(CACHE, settled, 260)}>
+              <button
+                type="button"
+                aria-pressed={selectedId === 'cache'}
+                onMouseEnter={() => onSelect('cache')}
+                onFocus={() => onSelect('cache')}
+                onClick={() => onSelect('cache')}
+                className={clsx(
+                  'absolute inset-0 rounded-[3px] bg-transparent',
+                  tierBtn('cache'),
+                )}
+                aria-label="In-process informer cache">
+                <FaceLabel
+                  title="Informer cache"
+                  sub="warm, per cluster"
+                  className="left-3 top-3 text-left"
+                />
+              </button>
+            </Extruded>
+
+            <Extruded
+              geom={MUX}
+              fill={FACE_BOX}
+              edge={selectedId === 'gateway' ? EDGE_ACCENT : EDGE}
+              frontShade={0.22}
+              rightShade={0.36}
+              entrance={entranceStyle(MUX, settled, 340)}
+              interact={{onSelect: selectGateway}}>
+              <FaceLabel title="Multiplexer" sub="one /ws" className="right-3 top-2.5 text-right" />
+              {/* The glowing pad where the hero beam leaves the face. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute rounded-full"
+                style={{
+                  left: BEAM.x - MUX.x - 13,
+                  top: BEAM.y - MUX.y - 13,
+                  width: 26,
+                  height: 26,
+                  background:
+                    'radial-gradient(circle, color-mix(in oklch, var(--primary), transparent 25%), transparent 70%)',
+                }}
+              />
+              {/* The one live-green signal: the watch stream is connected. */}
+              <span
+                aria-hidden
+                className="absolute bottom-2.5 left-3 flex items-center gap-1.5"
+                style={{pointerEvents: 'none'}}>
+                <span
+                  className="size-1.5 rounded-full bg-live"
+                  style={
+                    reduced
+                      ? undefined
+                      : {
+                          animation: `arch3d-dot-${variant} 2.2s ease-in-out infinite`,
+                          animationPlayState: animate ? 'running' : 'paused',
+                        }
+                  }
+                />
+                <span className="font-mono text-[8px] uppercase tracking-[0.12em] text-live">
+                  watch_connected
+                </span>
+              </span>
+            </Extruded>
+
+            <Extruded
+              geom={AUTH}
+              fill={FACE_BOX}
+              edge={selectedId === 'gateway' ? EDGE_ACCENT : EDGE}
+              frontShade={0.22}
+              rightShade={0.36}
+              entrance={entranceStyle(AUTH, settled, 420)}
+              interact={{onSelect: selectGateway}}>
+              <FaceLabel title="Auth proxy" sub="your credentials" className="left-3 top-3" />
+            </Extruded>
+
+            <Extruded
+              geom={SWR}
+              fill={FACE_BOX}
+              edge={selectedId === 'gateway' ? EDGE_ACCENT : EDGE}
+              frontShade={0.22}
+              rightShade={0.36}
+              entrance={entranceStyle(SWR, settled, 500)}
+              interact={{onSelect: selectGateway}}>
+              <FaceLabel
+                title="SWR memoizers"
+                sub="verdicts · catalog · topology"
+                className="left-3 top-3"
+              />
+            </Extruded>
+
+            {/* ---- apiserver chips (ground level, far-left flank) ---- */}
+            {CHIPS.map((chip, i) => (
+              <Extruded
+                key={CHIP_NAMES[i]}
+                geom={chip}
+                fill={FACE_CHIP}
+                edge={selectedId === 'apiservers' ? EDGE_ACCENT : EDGE}
+                glow={selectedId === 'apiservers'}
+                frontShade={0.24}
+                rightShade={0.38}
+                entrance={entranceStyle(chip, settled, 320 + i * 80)}
+                interact={{onSelect: () => onSelect('apiservers')}}>
+                <FaceLabel title={CHIP_NAMES[i]} className="left-3 top-1/2 -translate-y-1/2" />
+              </Extruded>
+            ))}
+            {/* Invisible flat hit area: the one focusable apiservers button. */}
+            <button
+              type="button"
+              aria-pressed={selectedId === 'apiservers'}
+              aria-label="Your clusters' apiservers"
+              onMouseEnter={() => onSelect('apiservers')}
+              onFocus={() => onSelect('apiservers')}
+              onClick={() => onSelect('apiservers')}
+              className={clsx('absolute rounded-md border-0 bg-transparent', tierBtn('apiservers'))}
+              style={{
+                left: CHIPS[0].x - 8,
+                top: CHIPS[0].y - 8,
+                width: CHIP_W + 16,
+                height: CHIPS[2].y + CHIP_H - CHIPS[0].y + 16,
+                transform: 'translateZ(31px)',
+              }}
+            />
+
+            {/* ---- watch traces: apiservers fan into the informer cache ---- */}
+            {WATCH_TRACES.map((t, i) => (
+              <Trace
+                key={t.angle}
+                geom={t}
+                variant={variant}
+                settled={settled}
+                animate={animate}
+                reduced={reduced}
+                delaySec={i * 0.8}
+              />
+            ))}
+            {/* ---- snapshots + deltas: cache -> multiplexer ---- */}
+            <Trace
+              geom={SHORT_TRACE}
+              variant={variant}
+              settled={settled}
+              animate={animate}
+              reduced={reduced}
+              delaySec={0.4}
+            />
+
+            {/* ---- the hero beam: multiplexer -> browser slab ---- */}
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: BEAM.x - 5,
+                top: BEAM.y,
+                width: 10,
+                height: reduced || grown ? BEAM.h : 0,
+                transformOrigin: 'top',
+                transform: `translateZ(${BEAM.z0}px) rotateX(90deg)`,
+                transition: 'height 550ms ease-out 950ms',
+                overflow: 'hidden',
+                borderRadius: 5,
+                background:
+                  'linear-gradient(to bottom, color-mix(in oklch, var(--primary), transparent 35%), color-mix(in oklch, var(--primary), transparent 5%))',
+                boxShadow: '0 0 22px 2px color-mix(in oklch, var(--primary), transparent 25%)',
+                pointerEvents: 'none',
+              }}>
+              {!reduced &&
+                [0, 1, 2].map((n) => (
+                  <div
+                    key={n}
+                    style={
+                      {
+                        position: 'absolute',
+                        left: 1,
+                        top: -20,
+                        width: 8,
+                        height: 20,
+                        borderRadius: 4,
+                        background: 'color-mix(in oklch, var(--primary), white 55%)',
+                        boxShadow:
+                          '0 0 10px 2px color-mix(in oklch, var(--primary), transparent 25%)',
+                        '--rise': `${BEAM.h + 40}px`,
+                        animation: `arch3d-rise-${variant} 2.1s ease-in-out infinite`,
+                        animationDelay: `${-n * 0.7}s`,
+                        animationPlayState: animate ? 'running' : 'paused',
+                      } as CSSProperties
+                    }
+                  />
+                ))}
+            </div>
+            {/* ---- the browser SPA slab ---- */}
+            <Extruded
+              geom={SLAB}
+              fill={FACE_PLATFORM}
+              edge={selectedId === 'browser' ? EDGE_ACCENT : EDGE}
+              glow={selectedId === 'browser'}
+              frontShade={0.18}
+              rightShade={0.3}
+              entrance={entranceStyle(SLAB, settled, 680)}
+              topClassName="bg-dotgrid">
+              <button
+                type="button"
+                aria-pressed={selectedId === 'browser'}
+                onMouseEnter={() => onSelect('browser')}
+                onFocus={() => onSelect('browser')}
+                onClick={() => onSelect('browser')}
+                className={clsx(
+                  'absolute inset-0 rounded-[3px] bg-transparent text-left',
+                  tierBtn('browser'),
+                )}
+                aria-label="Browser SPA">
+                <span className="absolute bottom-2.5 left-3.5">
+                  <span className="block font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground">
+                    Browser SPA
+                  </span>
+                  <span className="mt-0.5 block font-mono text-[8.5px] text-muted-foreground">
+                    only visible rows in the DOM
+                  </span>
+                </span>
+              </button>
+            </Extruded>
+
+            <Extruded
+              geom={STORE}
+              fill={FACE_BOX}
+              edge={selectedId === 'browser' ? EDGE_ACCENT : EDGE}
+              frontShade={0.2}
+              rightShade={0.34}
+              entrance={entranceStyle(STORE, settled, 840)}
+              interact={{onSelect: () => onSelect('browser')}}>
+              <FaceLabel title="Normalized store" className="left-2.5 top-2.5" />
+            </Extruded>
+            <Extruded
+              geom={VTABLE}
+              fill={FACE_BOX}
+              edge={selectedId === 'browser' ? EDGE_ACCENT : EDGE}
+              frontShade={0.2}
+              rightShade={0.34}
+              entrance={entranceStyle(VTABLE, settled, 920)}
+              interact={{onSelect: () => onSelect('browser')}}>
+              <FaceLabel title="Virtualized table" className="left-2.5 top-2.5" />
+            </Extruded>
+          </div>
+
+          {/* ---- 2D caption overlay, pinned at exact projected coordinates ---- */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{opacity: settled ? 1 : 0, transition: 'opacity 500ms ease-out 1100ms'}}>
+            {CAPTIONS.map((c) => (
+              <div
+                key={c.lines[0]}
+                className={clsx(
+                  'absolute -translate-y-1/2 whitespace-nowrap font-mono text-2xs leading-snug text-muted-foreground',
+                  c.align === 'right' && '-translate-x-full text-right',
+                )}
+                style={{
+                  left: c.at.x + c.dx,
+                  top: c.at.y + c.dy,
+                  textShadow: '0 0 8px var(--background), 0 0 3px var(--background)',
+                }}>
+                {c.lines.map((line) => (
+                  <div key={line}>{line}</div>
+                ))}
+              </div>
+            ))}
+            <div
+              className="absolute -translate-y-full font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
+              style={{
+                left: CHIP_HEADING.x - 30,
+                top: CHIP_HEADING.y - 8,
+                textShadow: '0 0 8px var(--background)',
+              }}>
+              your clusters&apos; apiservers
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 export function ArchitectureDiagram({variant}: {variant: 'landing' | 'full'}): ReactNode {
-  // full preselects the first tier; landing highlights the product (gateway).
-  const [selectedId, setSelectedId] = useState(
-    variant === 'full' ? TIERS[0].id : 'gateway',
-  );
+  const [selectedId, setSelectedId] = useState('gateway');
   const reduced = usePrefersReducedMotion();
-  // Track continuously so packets/float pause off-screen; once:false toggles both ways.
-  const [figureRef, inView] = useInView<HTMLElement>({once: false, threshold: 0.25});
+  const [figureRef, inView] = useInView<HTMLElement>({once: false, threshold: 0.2});
   const animate = inView && !reduced;
 
-  // Assemble runs once, the first time the scene enters view. Reduced motion
-  // renders the planes settled from the start.
   const [assembled, setAssembled] = useState(false);
   useEffect(() => {
     if (inView) setAssembled(true);
   }, [inView]);
   const settled = reduced || assembled;
 
-  const selected = TIERS.find((t) => t.id === selectedId) ?? TIERS[0];
-
-  const figure = (
-    <figure ref={figureRef} className="m-0 w-full">
-      <figcaption className="sr-only">
-        Clustrail data plane, top to bottom: the browser SPA, the Go gateway, the in-process
-        informer cache, and your clusters&apos; API servers. Snapshots and watch deltas flow
-        upward from the API servers to the browser over a single multiplexed WebSocket - the
-        gateway never holds privileges beyond your own credentials, so Kubernetes enforces RBAC.
-      </figcaption>
-
-      <IsoScene
-        variant={variant}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-        animate={animate}
-        reduced={reduced}
-        settled={settled}
-      />
-      <FlatStack
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-        animate={animate}
-        reduced={reduced}
-      />
-
-      <p className="mt-6 font-mono text-2xs leading-relaxed text-muted-foreground/80">
-        The one exception: metrics.k8s.io has no watch verb, so CPU/RAM is the single short-TTL
-        poll.
-      </p>
-    </figure>
-  );
-
-  if (variant === 'full') {
-    return (
-      <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        {figure}
-        <Explainer tier={selected} />
-      </div>
-    );
-  }
+  const selected = TIERS.find((t) => t.id === selectedId) ?? TIERS[1];
+  const maxW = variant === 'full' ? 'max-w-[880px]' : 'max-w-[660px]';
 
   return (
     <div className="flex flex-col gap-6">
-      {figure}
-      <Explainer tier={selected} className="mx-auto max-w-md text-left" />
+      <figure ref={figureRef} className="m-0 w-full">
+        <figcaption className="sr-only">
+          Clustrail data plane: your clusters&apos; API servers feed dynamic shared informers
+          inside the Go gateway (one static binary), which multiplexes snapshots and deltas over
+          a single WebSocket up to the browser SPA. The gateway proxies with your own
+          credentials, so Kubernetes enforces RBAC upstream.
+        </figcaption>
+
+        <style>{sceneCss(variant)}</style>
+
+        <div className={clsx('mx-auto w-full', maxW)}>
+          <Scene
+            variant={variant}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            settled={settled}
+            animate={animate}
+            reduced={reduced}
+          />
+        </div>
+
+        {/* Below md the 3D canvas hides and this flat list is the interface. */}
+        <div className="mx-auto flex w-full max-w-md flex-col gap-2 md:hidden">
+          {TIERS.map((tier) => (
+            <TierButton
+              key={tier.id}
+              tier={tier}
+              selected={selectedId === tier.id}
+              onSelect={() => setSelectedId(tier.id)}
+              className="w-full"
+            />
+          ))}
+        </div>
+      </figure>
+
+      <Explainer
+        tier={selected}
+        compact={variant === 'landing'}
+        className={clsx('mx-auto w-full', maxW)}
+      />
+
+      <p
+        className={clsx(
+          'mx-auto w-full font-mono text-2xs leading-relaxed text-muted-foreground/80',
+          maxW,
+        )}>
+        The one exception: metrics.k8s.io has no watch verb, so CPU/RAM is the single short-TTL
+        poll.
+      </p>
     </div>
   );
 }
