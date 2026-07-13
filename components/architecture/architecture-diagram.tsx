@@ -46,11 +46,11 @@
  * canvas); flow captions are flat 2D overlays pinned at precomputed projected
  * coordinates so they stay crisp and never fight 3D occlusion.
  *
- * Interaction: four focusable tier buttons (cluster base, gateway platform,
- * cache box, SPA slab) drive the aria-live explainer below the scene; the
- * other internals and the chips hover-select their tier. Below md the 3D
- * canvas hides and a flat stacked tier-button list takes over. Reduced
- * motion renders everything settled; off-viewport pauses the packet loops.
+ * Interaction: the four tier surfaces (cluster base, gateway platform, cache
+ * box, SPA slab) highlight on hover/focus; the internals and chips highlight
+ * their tier. Below md the 3D canvas hides and a flat stacked tier list takes
+ * over. Reduced motion renders everything settled; off-viewport pauses the
+ * packet loops.
  */
 
 import {useEffect, useRef, useState} from 'react';
@@ -66,17 +66,14 @@ interface Tier {
   tag?: string;
   annotations: string[];
   emphasized?: boolean;
-  blurb: string;
 }
 
-/* The four tiers of the explainer, top of the stack to the clusters. */
+/* The four tiers, top of the stack to the clusters. */
 const TIERS: Tier[] = [
   {
     id: 'browser',
     name: 'Browser SPA',
     annotations: ['normalized store', 'virtualized tables', 'only visible rows'],
-    blurb:
-      'The SPA keeps a thin normalized store and renders only the rows in view, so a 10,000-row list never puts 10,000 nodes in the DOM. It applies each streamed delta as a patch, landing a change on screen in under 8 milliseconds.',
   },
   {
     id: 'gateway',
@@ -84,22 +81,16 @@ const TIERS: Tier[] = [
     tag: 'one static binary',
     annotations: ['embedded SPA', 'authenticating proxy', 'one /ws'],
     emphasized: true,
-    blurb:
-      'One Go binary with the React SPA embedded via go:embed. It serves the UI and acts as an authenticating reverse proxy, multiplexing every list and detail view over a single WebSocket. It never holds privileges beyond your own per-cluster credentials.',
   },
   {
     id: 'cache',
     name: 'In-process informer cache',
     annotations: ['warm per-cluster cache', 'managedFields stripped'],
-    blurb:
-      'Per cluster, dynamic shared informers keep an authoritative watch cache warm in process. A SetTransform strips managedFields before anything is cached, and idle informers stop, so backend memory stays small.',
   },
   {
     id: 'apiservers',
     name: "Your clusters' apiservers",
     annotations: ['multi-cluster', 'your credentials', 'RBAC decides'],
-    blurb:
-      'Your real Kubernetes API servers, one or many. The gateway lists and proxies with your own credentials, so the API server itself enforces RBAC. There is no privileged see-everything token anywhere in the path.',
   },
 ];
 
@@ -613,31 +604,13 @@ function VBeam({
   );
 }
 
-/* ---- tier button (mobile stacked list) ------------------------------------- */
-function TierButton({
-  tier,
-  selected,
-  onSelect,
-  className,
-}: {
-  tier: Tier;
-  selected: boolean;
-  onSelect: () => void;
-  className?: string;
-}): ReactNode {
+/* ---- tier tile (the mobile stacked fallback, static) ------------------------ */
+function TierTile({tier}: {tier: Tier}): ReactNode {
   return (
-    <button
-      type="button"
-      onMouseEnter={onSelect}
-      onFocus={onSelect}
-      onClick={onSelect}
-      aria-pressed={selected}
+    <div
       className={clsx(
-        'rounded-lg border bg-card px-3 py-2 text-left transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+        'rounded-lg border border-border bg-card px-3 py-2',
         tier.emphasized && 'ring-1 ring-primary/30',
-        selected ? 'border-primary/50' : 'border-border hover:border-primary/40',
-        className,
       )}>
       <span className="flex items-baseline gap-2 overflow-hidden">
         <span className="whitespace-nowrap text-[13px] font-medium text-foreground">
@@ -650,35 +623,6 @@ function TierButton({
       <span className="mt-0.5 block truncate text-2xs text-muted-foreground">
         {tier.annotations.join(' · ')}
       </span>
-    </button>
-  );
-}
-
-function Explainer({
-  tier,
-  compact,
-  className,
-}: {
-  tier: Tier;
-  compact?: boolean;
-  className?: string;
-}): ReactNode {
-  return (
-    <div
-      aria-live="polite"
-      className={clsx(
-        'rounded-lg border border-border bg-card/50',
-        compact ? 'min-h-24 p-3 sm:p-4' : 'min-h-28 p-4 sm:min-h-24 sm:p-5',
-        className,
-      )}>
-      <span className="text-xs font-semibold text-primary">{tier.name}</span>
-      <p
-        className={clsx(
-          'mt-2 leading-relaxed text-muted-foreground',
-          compact ? 'text-[13px]' : 'text-sm',
-        )}>
-        {tier.blurb}
-      </p>
     </div>
   );
 }
@@ -1054,7 +998,6 @@ export function ArchitectureDiagram({variant}: {variant: 'landing' | 'full'}): R
   }, [inView]);
   const settled = reduced || assembled;
 
-  const selected = TIERS.find((t) => t.id === selectedId) ?? TIERS[1];
   const maxW = variant === 'full' ? 'max-w-[880px]' : 'max-w-[660px]';
 
   return (
@@ -1080,25 +1023,13 @@ export function ArchitectureDiagram({variant}: {variant: 'landing' | 'full'}): R
           />
         </div>
 
-        {/* Below md the 3D canvas hides and this flat list is the interface. */}
+        {/* Below md the 3D canvas hides and this flat stack stands in for it. */}
         <div className="mx-auto flex w-full max-w-md flex-col gap-2 md:hidden">
           {TIERS.map((tier) => (
-            <TierButton
-              key={tier.id}
-              tier={tier}
-              selected={selectedId === tier.id}
-              onSelect={() => setSelectedId(tier.id)}
-              className="w-full"
-            />
+            <TierTile key={tier.id} tier={tier} />
           ))}
         </div>
       </figure>
-
-      <Explainer
-        tier={selected}
-        compact={variant === 'landing'}
-        className={clsx('mx-auto w-full', maxW)}
-      />
 
       <p
         className={clsx(
