@@ -4,56 +4,97 @@ import {StatTile} from '@/components/stat-tile';
 import {RevealSection} from '@/components/landing/reveal-section';
 
 /**
- * 02 PERFORMANCE. Real measured numbers, counted up on first view - no
- * adjectives. Each tile states its honest condition in the sub-label; the
- * footnote records where the numbers came from.
+ * 02 PERFORMANCE. A split band: the claim on the left, the receipts on the
+ * right as a 2x2 hairline-celled instrument panel. Every number is measured
+ * (counted up on first view); each cell states its honest condition, and the
+ * cells with a CI budget say so explicitly - the story is the headroom, not
+ * the adjective.
  */
 
-type Tile = {
+type Cell = {
   value: number;
   decimals?: number;
   prefix?: string;
   suffix: string;
   label: string;
   sublabel: string;
+  /** The CI gate this figure is held to, when one exists. */
+  budget?: string;
 };
 
-const TILES: Tile[] = [
-  {value: 8, prefix: '<', suffix: 'ms', label: 'watch delta to screen', sublabel: '10,000-row table'},
-  {value: 1.5, decimals: 1, suffix: 'ms', label: 'subscribe to snapshot', sublabel: 'warm informer cache'},
-  {value: 60, suffix: 'fps', label: '10,000-row tables', sublabel: 'only visible rows in the DOM'},
-  {value: 49, suffix: 'MB', label: 'backend idle RSS', sublabel: 'budget 80 MB'},
+const CELLS: Cell[] = [
+  {
+    value: 8,
+    prefix: '<',
+    suffix: 'ms',
+    label: 'watch delta to screen',
+    sublabel: '10,000-row table',
+    budget: 'CI gate · 8 ms',
+  },
+  {
+    value: 1.5,
+    decimals: 1,
+    suffix: 'ms',
+    label: 'subscribe to snapshot',
+    sublabel: 'warm informer cache',
+  },
+  {
+    value: 60,
+    suffix: 'fps',
+    label: '10,000-row tables',
+    sublabel: 'only visible rows in the DOM',
+    budget: 'CI gate · 16 ms/frame',
+  },
+  {
+    value: 49,
+    suffix: 'MB',
+    label: 'backend idle RSS',
+    sublabel: 'one cluster, core resources',
+    budget: 'CI gate · 80 MB',
+  },
 ];
 
 export function MetricsBand(): ReactNode {
   return (
     <RevealSection className="border-b border-border py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-6">
-        <SectionHeader
-          kicker="Performance"
-          title="Numbers, not adjectives"
-          lede="Every figure below is measured, not marketed. Runtime budgets are hard acceptance criteria, enforced in CI."
-        />
+        <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,24rem)_1fr] lg:gap-20">
+          {/* The claim. */}
+          <div className="reveal flex flex-col gap-6 lg:sticky lg:top-28">
+            <SectionHeader
+              kicker="Performance"
+              title="Numbers, not adjectives"
+              lede="Every figure here is measured, not marketed. The budgets are hard acceptance criteria: a change that ships over one is not done."
+              align="left"
+            />
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Measured on a local three-node kind cluster - the same one the project develops
+              against, so the numbers are reproducible, not lab-tuned.
+            </p>
+          </div>
 
-        <div className="mt-14 grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-          {TILES.map((t, i) => (
-            <div
-              key={t.label}
-              className="reveal"
-              style={{'--reveal-delay': `${i * 70}ms`} as CSSProperties}>
-              <StatTile
-                value={t.value}
-                decimals={t.decimals}
-                prefix={t.prefix}
-                suffix={t.suffix}
-                label={t.label}
-                sublabel={t.sublabel}
-              />
-            </div>
-          ))}
+          {/* The receipts: a 2x2 instrument panel. */}
+          <div className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2">
+            {CELLS.map((c, i) => (
+              <div
+                key={c.label}
+                className="reveal flex flex-col justify-between gap-8 bg-card p-6 sm:p-8"
+                style={{'--reveal-delay': `${i * 70}ms`} as CSSProperties}>
+                <StatTile
+                  value={c.value}
+                  decimals={c.decimals}
+                  prefix={c.prefix}
+                  suffix={c.suffix}
+                  label={c.label}
+                  sublabel={c.sublabel}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {c.budget ?? 'measured, no gate'}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-
-        <p className="mt-12 text-sm text-muted-foreground">Measured on a local kind cluster.</p>
       </div>
     </RevealSection>
   );
